@@ -4,6 +4,7 @@ pub trait RayResolver{
     fn resolve(&self, pos: Vector3, dir: Vector3, scene: SceneData) -> Option<RayResult>;
 }
 
+#[derive(Clone)]
 pub enum MaterialType{
     Diffuse,
     Reflective

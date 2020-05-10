@@ -7,7 +7,52 @@ pub struct Vector3{
     pub z: f32,
 }
 
+pub enum Components{
+    X, Y, Z
+}
+
 impl Vector3{
+
+    pub fn largest_component(&self) -> Components{
+        if self.x.abs() > self.y.abs() {
+            if self.x.abs() > self.z.abs() {
+                return Components::X;
+            }else {
+                return Components::Z;
+            }
+        }else{
+            if self.y.abs() > self.z.abs(){
+                return Components::Y;
+            }else{
+                return Components::Z;
+            }
+        }
+    }
+
+    pub fn largest_component_value(&self) -> f32{
+        match self.largest_component() {
+            Components::X => self.x,
+            Components::Y => self.y,
+            Components::Z => self.z
+        }
+    }
+
+    pub fn only_largest_component(&self) -> Self{
+        match self.largest_component(){
+            Components::X => Self::new(self.x, 0f32, 0f32),
+            Components::Y => Self::new(0f32, self.y, 0f32),
+            Components::Z => Self::new(0f32, 0f32, self.z)
+        }
+    }
+
+    pub fn abs(&self) -> Self{
+        Self::new(
+            self.x.abs(),
+            self.y.abs(),
+            self.z.abs()
+        )
+    }
+
     pub fn zero() -> Self{
         Self::new(0f32, 0f32, 0f32)
     }

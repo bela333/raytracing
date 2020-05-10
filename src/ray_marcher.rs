@@ -43,12 +43,14 @@ impl RayMarcher{
     
 
     fn get_sdf(&self, p: Vector3) -> SDFResult{
-        let _sphere = SDFResult::sphere(p, Vector3::new(0f32, 0f32, 3f32), 1f32);
+        let _sphere1 = SDFResult::sphere(p, Vector3::new(-1f32, 0f32, 3f32), 1f32);
+        let _sphere2 = SDFResult::sphere(p, Vector3::new(1f32, 0f32, 3f32), 1f32);
         let _plane = SDFResult::plane(p, -0.5, self.epsilon*2f32);
-        let sphere = SDFResult::new(_sphere, Vector3::new(0f32, 1f32, 0f32), Vector3::zero(), MaterialType::Diffuse);
+        let sphere1 = SDFResult::new(_sphere1, Vector3::new(0f32, 1f32, 0f32), Vector3::zero(), MaterialType::Diffuse);
+        let sphere2 = SDFResult::new(_sphere2, Vector3::new(1f32, 1f32, 1f32), Vector3::zero(), MaterialType::Reflective);
         let plane = SDFResult::new(_plane, Vector3::new(1f32, 1f32, 1f32), Vector3::zero(), MaterialType::Diffuse);
 
-        let _lamp = SDFResult::sphere(p, Vector3::new(0f32, 3f32, 3f32), 1f32);
+        let _lamp = SDFResult::sphere(p, Vector3::new(0f32, 4.5, 3f32), 1f32);
         let lamp = SDFResult::new(
             _lamp,
             Vector3::new(1f32, 1f32, 1f32),
@@ -56,7 +58,7 @@ impl RayMarcher{
             MaterialType::Diffuse
         );
 
-        sphere.union(plane).union(lamp)
+        sphere1.union(plane).union(lamp).union(sphere2)
     }
 
     pub fn get_normal(&self, pos: Vector3) -> Vector3 {
@@ -77,7 +79,7 @@ impl RayResolver for RayMarcher{
     fn resolve(&self, pos: Vector3, dir: Vector3, scene: SceneData) -> Option<RayResult> {
         let mut dist = 0f32;
         let mut p = pos;
-        for i in 0..self.max_steps{
+        for _ in 0..self.max_steps{
             if dist > self.max_distance {
                 return None;
             }
