@@ -74,7 +74,7 @@ impl Vector3{
     pub fn reflect(&self, normal: Self) -> Self{
         let a = self.dot(normal);
         let p = self.multiply(1f32/a);
-        normal.multiply(2f32).add(p).normalized()
+        normal.multiply(2f32).subtract(p).normalized()
     }
 
     pub fn random_on_sphere() -> Self{
@@ -90,6 +90,30 @@ impl Vector3{
         }else{
             p
         }
+    }
+
+    pub fn comp_multiply(&self, a: Self) -> Self{
+        Self::new(
+            self.x * a.x,
+            self.y * a.y,
+            self.z * a.z,
+        )
+    }
+
+    pub fn add_scalar(&self, a: f32) -> Self{
+        Self::new(
+            self.x + a,
+            self.y + a,
+            self.z + a,
+        )
+    }
+
+    pub fn pow(&self, a: f32) -> Self{
+        Self::new(
+            self.x.powf(a),
+            self.y.powf(a),
+            self.z.powf(a),
+        )
     }
 }
 

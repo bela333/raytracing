@@ -1,5 +1,6 @@
-use crate::ray_resolver::{RayResolver, RayResult};
+use crate::ray_resolver::{RayResolver, RayResult, MaterialType};
 use crate::utilities::{Vector3, SceneData};
+
 
 pub struct RayMarcher{
     pub max_steps: u32,
@@ -7,18 +8,20 @@ pub struct RayMarcher{
     pub epsilon: f32
 }
 
-#[derive(Clone)]
-struct SDFResult{
+
+pub struct SDFResult{
     dist: f32,
-    color: Vector3
+    color: Vector3,
+    emit: Vector3,
+    t: MaterialType
 }
 
 impl SDFResult{
-    fn new(dist: f32, color: Vector3) -> Self{
-        Self{dist, color}
+    pub fn new(dist: f32, color: Vector3, emit: Vector3, t: MaterialType) -> Self{
+        Self{dist, color, emit, t}
     }
 
-    fn union(self, a: Self) -> Self{
+    pub fn union(self, a: Self) -> Self{
         if self.dist < a.dist {
             self
         }else{
@@ -27,11 +30,11 @@ impl SDFResult{
     }
 
 
-    fn sphere(p: Vector3, pos: Vector3, radius: f32) -> f32{
+    pub fn sphere(p: Vector3, pos: Vector3, radius: f32) -> f32{
         p.subtract(pos).length()-radius
     }
 
-    fn plane(p: Vector3, height: f32, thickness: f32) -> f32{
+    pub fn plane(p: Vector3, height: f32, thickness: f32) -> f32{
         (p.y-height).abs()-thickness
     }
 }
@@ -42,9 +45,18 @@ impl RayMarcher{
     fn get_sdf(&self, p: Vector3) -> SDFResult{
         let _sphere = SDFResult::sphere(p, Vector3::new(0f32, 0f32, 3f32), 1f32);
         let _plane = SDFResult::plane(p, -0.5, self.epsilon*2f32);
-        let sphere = SDFResult::new(_sphere, Vector3::new(0f32, 1f32, 0f32));
-        let plane = SDFResult::new(_plane, Vector3::new(1f32, 1f32, 1f32));
-        sphere.union(plane)
+        let sphere = SDFResult::new(_sphere, Vector3::new(0f32, 1f32, 0f32), Vector3::zero(), MaterialType::Diffuse);
+        let plane = SDFResult::new(_plane, Vector3::new(1f32, 1f32, 1f32), Vector3::zero(), MaterialType::Diffuse);
+
+        let _lamp = SDFResult::sphere(p, Vector3::new(0f32, 3f32, 3f32), 1f32);
+        let lamp = SDFResult::new(
+            _lamp,
+            Vector3::new(1f32, 1f32, 1f32),
+            Vector3::new(1f32, 1f32, 1f32).multiply(100f32),
+            MaterialType::Diffuse
+        );
+
+        sphere.union(plane).union(lamp)
     }
 
     pub fn get_normal(&self, pos: Vector3) -> Vector3 {
@@ -76,7 +88,9 @@ impl RayResolver for RayMarcher{
                 return Some(RayResult{
                     pos: p,
                     color: sdf_value.color,
-                    normal: self.get_normal(p)
+                    normal: self.get_normal(p),
+                    emit: sdf_value.emit,
+                    t: sdf_value.t
                 });
             }
         }
