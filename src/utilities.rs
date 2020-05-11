@@ -62,6 +62,10 @@ impl Vector3{
         }
     }
 
+    pub fn from_single(a: f32) -> Self{
+        Self::new(a, a, a)
+    }
+
     fn restrict_value(v: f32) -> f32{
         match v{
             v if v < 0f32 => 0f32,
@@ -160,9 +164,67 @@ impl Vector3{
             self.z.powf(a),
         )
     }
+
+    pub fn cross(&self, a: Self) -> Self{
+        let x = self.y * a.z - self.z * a.y;
+        let y = self.z * a.x - self.x * a.z;
+        let z = self.x * a.y - self.y * a.x;
+        Self::new(x, y, z)
+    }
+
+    pub fn max(&self, a: Self) -> Self{
+        Self::new(
+            self.x.max(a.x),
+            self.y.max(a.y),
+            self.z.max(a.z),
+        )
+    }
+
+    pub fn min(&self, a: Self) -> Self{
+        Self::new(
+            self.x.min(a.x),
+            self.y.min(a.y),
+            self.z.min(a.z),
+        )
+    }
 }
 
 #[derive(Clone)]
 pub struct SceneData{
-
+    pub camera_position: Vector3,
+    pub camera_target: Vector3
 }
+
+impl SceneData{
+    pub fn get_look_matrix(&self) -> Matrix3{
+        let dir = self.camera_target.subtract(self.camera_position).normalized();
+        Matrix3::look_at_matrix(dir)
+    }
+}
+
+pub struct Matrix3{
+    i: Vector3,
+    j: Vector3,
+    k: Vector3
+}
+
+impl Matrix3{
+
+    pub fn new(i: Vector3, j: Vector3, k: Vector3) -> Self{
+        Self{i, j, k}
+    }
+
+    pub fn multiply(&self, a: Vector3) -> Vector3{
+        let x = self.i.multiply(a.x);
+        let y = self.j.multiply(a.y);
+        let z = self.k.multiply(a.z);
+        x.add(y).add(z)
+    }
+
+    pub fn look_at_matrix(dir: Vector3) -> Self{
+        let right = dir.cross(Vector3::new(0f32, 1f32, 0f32)).normalized().multiply(-1f32);
+        let up = right.cross(dir).multiply(-1f32);
+        Self::new(right, up, dir)
+    }
+}
+

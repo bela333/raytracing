@@ -14,7 +14,7 @@ pub mod path_tracer;
 use crate::renderer::Renderer;
 use image::{ImageBuffer};
 use rayon::prelude::*;
-use utilities::SceneData;
+use utilities::{Vector3, SceneData};
 use ray_resolver::RayResolver;
 use indicatif::{ProgressBar, ParallelProgressIterator, ProgressStyle};
 
@@ -43,7 +43,8 @@ fn main() {
         epsilon: 0.0002f32
     };
     let scene = utilities::SceneData{
-
+        camera_position: Vector3::new(0f32, 0f32, 0f32),
+        camera_target: Vector3::new(0f32, 0f32, 1f32)
     };
     match RENDERER{
         Renderers::BasicRenderer => {
@@ -55,8 +56,8 @@ fn main() {
         Renderers::PathTracer => {
             let renderer = path_tracer::PathTracer{
                 resolver: resolver,
-                bounces: 5,
-                samples: 1000,
+                bounces: 6,
+                samples: 5000,
                 epsilon: 0.0002f32,
                 contrast: 1f32/5f32,
                 brightness: -0.5
@@ -78,11 +79,11 @@ fn save_render<T: Renderer<J>, J: RayResolver>(renderer: &T, scene: &SceneData, 
     let pixels: Vec<u8> = (0..PIXELS).into_par_iter().progress_with(bar).map(|i| {
         let x = i % WIDTH;
         let y = i / WIDTH;
-        let start = utilities::Vector3::zero();
+        let start = scene.camera_position;
         let _x: f32 = (x as f32/WIDTH_F-1f32)*ASPECT_RATIO;
         let _y: f32 = -(y as f32/HEIGHT_F-1f32);
-        let dir = utilities::Vector3::new(_x, _y, 1f32).normalized();
-        let color = renderer.render(start, dir, scene.clone(), WIDTH, HEIGHT);
+        let ray_dir = scene.get_look_matrix().multiply(utilities::Vector3::new(_x, _y, 1f32).normalized());
+        let color = renderer.render(start, ray_dir, scene.clone(), WIDTH, HEIGHT);
         color.to_color_array().to_vec()
     }).flatten().collect();
     let image: ImageBuffer<image::Rgb<u8>, _> = ImageBuffer::from_vec(WIDTH, HEIGHT, pixels).unwrap();

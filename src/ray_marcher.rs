@@ -30,12 +30,17 @@ impl SDFResult{
     }
 
 
-    pub fn sphere(p: Vector3, pos: Vector3, radius: f32) -> f32{
+    pub fn sphere_dist(p: Vector3, pos: Vector3, radius: f32) -> f32{
         p.subtract(pos).length()-radius
     }
 
-    pub fn plane(p: Vector3, height: f32, thickness: f32) -> f32{
+    pub fn plane_dist(p: Vector3, height: f32, thickness: f32) -> f32{
         (p.y-height).abs()-thickness
+    }
+
+    pub fn box_dist(p: Vector3, b: f32) -> f32{
+        let q = p.abs().subtract(Vector3::from_single(b));
+        q.max(Vector3::from_single(0f32)).length() + q.y.max(q.z).max(q.x).min(0f32)
     }
 }
 
@@ -43,20 +48,22 @@ impl RayMarcher{
     
 
     fn get_sdf(&self, p: Vector3) -> SDFResult{
-        let _sphere1 = SDFResult::sphere(p, Vector3::new(-1f32, 0f32, 3f32), 1f32);
-        let _sphere2 = SDFResult::sphere(p, Vector3::new(1f32, 0f32, 3f32), 1f32);
-        let _plane = SDFResult::plane(p, -0.5, self.epsilon*2f32);
+        let _sphere1 = SDFResult::sphere_dist(p, Vector3::new(-1f32, 0f32, 3f32), 1f32);
+        let _sphere2 = SDFResult::sphere_dist(p, Vector3::new(1f32, 0f32, 3f32), 1f32);
+        let _plane = SDFResult::plane_dist(p, -0.5, self.epsilon*2f32);
+        let _lamp = SDFResult::sphere_dist(p, Vector3::new(0f32, 4.5, 3f32), 1f32);
+
         let sphere1 = SDFResult::new(_sphere1, Vector3::new(0f32, 1f32, 0f32), Vector3::zero(), MaterialType::Diffuse);
         let sphere2 = SDFResult::new(_sphere2, Vector3::new(1f32, 1f32, 1f32), Vector3::zero(), MaterialType::Reflective);
         let plane = SDFResult::new(_plane, Vector3::new(1f32, 1f32, 1f32), Vector3::zero(), MaterialType::Diffuse);
-
-        let _lamp = SDFResult::sphere(p, Vector3::new(0f32, 4.5, 3f32), 1f32);
         let lamp = SDFResult::new(
             _lamp,
             Vector3::new(1f32, 1f32, 1f32),
             Vector3::new(1f32, 1f32, 1f32).multiply(100f32),
             MaterialType::Diffuse
         );
+
+        
 
         sphere1.union(plane).union(lamp).union(sphere2)
     }
