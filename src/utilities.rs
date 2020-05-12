@@ -13,6 +13,14 @@ pub enum Components{
 
 impl Vector3{
 
+    pub fn from_int(v: u32) -> Self{
+        let r = (v >> 16 & 0xff) as f32 / 255f32;
+        let g = (v >> 8 & 0xff) as f32 / 255f32;
+        let b = (v >> 0 & 0xff) as f32 / 255f32;
+        Self::new(r, g, b).restrict_values()
+    }
+
+
     pub fn largest_component(&self) -> Components{
         if self.x.abs() > self.y.abs() {
             if self.x.abs() > self.z.abs() {
@@ -72,6 +80,14 @@ impl Vector3{
             v  if v > 1f32 => 1f32,
             _ => v
         }
+    }
+
+    fn restrict_values(&self) -> Self{
+        Self::new(
+            Self::restrict_value(self.x),
+            Self::restrict_value(self.y),
+            Self::restrict_value(self.z)
+        )
     }
 
     pub fn to_color_array(&self) -> [u8;3]{

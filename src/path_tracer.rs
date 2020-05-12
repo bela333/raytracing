@@ -1,7 +1,7 @@
 use crate::renderer::Renderer;
 use crate::utilities::{Vector3, SceneData};
 use crate::ray_resolver::{RayResolver, MaterialType};
-use rand_distr::{Uniform, Distribution};
+use rand_distr::Uniform;
 
 pub struct PathTracer<T>{
     pub resolver: T,
@@ -34,6 +34,9 @@ impl<T: RayResolver> PathTracer<T>{
                     rad = rad.comp_multiply(ray.color.multiply(ray.normal.dot(dir.multiply(-1f32))));
                     dir = find_outgoing(ray.pos.subtract(start).normalized(), ray.normal, ray.t);
                     start = ray.pos.add(ray.normal.multiply(self.epsilon*2f32));
+                    if rad.x == 0f32 && rad.y == 0f32 && rad.z == 0f32 {
+                        break;
+                    }
                 }
             }
         }
@@ -55,6 +58,6 @@ impl<T: RayResolver> Renderer<T> for PathTracer<T>{
             }
             o = o.add(c);
         }
-        o.multiply(1f32/(self.samples as f32)).pow(self.contrast).add_scalar(self.brightness)
+        o.multiply(1f32/(self.samples as f32))
     }
 }

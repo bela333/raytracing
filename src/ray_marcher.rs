@@ -50,22 +50,29 @@ impl RayMarcher{
     fn get_sdf(&self, p: Vector3) -> SDFResult{
         let _sphere1 = SDFResult::sphere_dist(p, Vector3::new(-1f32, 0f32, 3f32), 1f32);
         let _sphere2 = SDFResult::sphere_dist(p, Vector3::new(1f32, 0f32, 3f32), 1f32);
-        let _plane = SDFResult::plane_dist(p, -0.5, self.epsilon*2f32);
-        let _lamp = SDFResult::sphere_dist(p, Vector3::new(0f32, 4.5, 3f32), 1f32);
-
-        let sphere1 = SDFResult::new(_sphere1, Vector3::new(0f32, 1f32, 0f32), Vector3::zero(), MaterialType::Diffuse);
+        let _sphere3 = SDFResult::sphere_dist(p, Vector3::new(0f32, 0f32, -1.2f32), 1f32);
+        let _plane = SDFResult::plane_dist(p, -1f32, self.epsilon*2f32);
+        let _lamp = SDFResult::plane_dist(p, 3f32, self.epsilon*2f32);
+        let _cube = -SDFResult::box_dist(p, 5f32);
+        
+        //Red sphere
+        let sphere1 = SDFResult::new(_sphere1, Vector3::from_int(0xd65c33), Vector3::zero(), MaterialType::Diffuse);
+        //Reflective sphere
         let sphere2 = SDFResult::new(_sphere2, Vector3::new(1f32, 1f32, 1f32), Vector3::zero(), MaterialType::Reflective);
-        let plane = SDFResult::new(_plane, Vector3::new(1f32, 1f32, 1f32), Vector3::zero(), MaterialType::Diffuse);
+        //Blue sphere
+        let sphere3 = SDFResult::new(_sphere3, Vector3::from_int(0x6d59d4), Vector3::zero(), MaterialType::Diffuse);
+        let plane = SDFResult::new(_plane, Vector3::from_int(0x86de5d), Vector3::zero(), MaterialType::Diffuse);
         let lamp = SDFResult::new(
             _lamp,
-            Vector3::new(1f32, 1f32, 1f32),
-            Vector3::new(1f32, 1f32, 1f32).multiply(100f32),
+            Vector3::new(0f32, 0f32, 0f32),
+            Vector3::from_int(0xc7fff6),
             MaterialType::Diffuse
         );
+        let cube = SDFResult::new(_cube, Vector3::from_single(1f32), Vector3::zero(), MaterialType::Diffuse);
 
         
 
-        sphere1.union(plane).union(lamp).union(sphere2)
+        sphere1.union(plane).union(lamp).union(sphere2).union(cube).union(sphere3)
     }
 
     pub fn get_normal(&self, pos: Vector3) -> Vector3 {
