@@ -1,7 +1,7 @@
 use crate::renderer::Renderer;
 use crate::utilities::{Vector3, SceneData};
 use crate::ray_resolver::{RayResolver, MaterialType};
-use rand_distr::Uniform;
+use rand_distr::{Distribution, Uniform};
 
 pub struct PathTracer<T>{
     pub resolver: T,
@@ -9,7 +9,10 @@ pub struct PathTracer<T>{
     pub samples: u32,
     pub epsilon: f32,
     pub contrast: f32,
-    pub brightness: f32
+    pub brightness: f32,
+    pub depth_of_field: f32,
+    pub dof_distr: Uniform<f32>,
+    pub dof: bool
 }
 
 fn find_outgoing(incoming: Vector3, normal: Vector3, material: MaterialType) -> Vector3{
@@ -23,6 +26,17 @@ impl<T: RayResolver> PathTracer<T>{
     fn render_sample(&self, start: &Vector3, dir: &Vector3, scene: &SceneData) -> (Vector3, u32){
         let mut start = *start;
         let mut dir = *dir;
+
+        if self.dof {
+            let p = dir.multiply(self.depth_of_field).add(start);
+            let mut rng = rand::thread_rng();
+            start = start.add(Vector3::new(
+                self.dof_distr.sample(&mut rng),
+                self.dof_distr.sample(&mut rng),
+                self.dof_distr.sample(&mut rng)
+            ));
+            dir = p.subtract(start).normalized();
+        }
 
         let mut emit = Vector3::zero();
         let mut rad = Vector3::new(1f32, 1f32, 1f32);

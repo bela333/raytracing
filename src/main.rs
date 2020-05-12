@@ -19,7 +19,8 @@ use utilities::{Vector3, SceneData};
 use ray_resolver::RayResolver;
 use indicatif::{ProgressBar, ParallelProgressIterator, ProgressStyle};
 use exr::{prelude::*, image::rgba::Channel};
-use std::f32::consts::{PI, FRAC_PI_2};
+use std::f32::consts::{PI, FRAC_PI_2, SQRT_2};
+use rand_distr::Uniform;
 
 const WIDTH:u32 = 848;
 const HEIGHT:u32 = 480;
@@ -30,6 +31,7 @@ const HEIGHT_F:f32 = HEIGHT as f32 / 2f32;
 const ASPECT_RATIO:f32 = WIDTH_F / HEIGHT_F;
 
 const PIXELS: u32 = WIDTH * HEIGHT;
+const FOV: f32 = 0.75;
 
 
 enum Renderers{
@@ -52,7 +54,7 @@ enum CameraTypes{
     Equirectangular
 }
 
-const CAMERA_TYPE: CameraTypes = CameraTypes::Equirectangular;
+const CAMERA_TYPE: CameraTypes = CameraTypes::Normal;
 
 
 fn main() {
@@ -76,10 +78,13 @@ fn main() {
             let renderer = path_tracer::PathTracer{
                 resolver: resolver,
                 bounces: 4,
-                samples: 100,
+                samples: 1000,
                 epsilon: 0.0002f32,
                 contrast: 1f32/5f32,
-                brightness: -0.5
+                brightness: -0.5,
+                depth_of_field: 3f32,
+                dof_distr: Uniform::new(-0.25, 0.25),
+                dof: true
             };
             save_render(&renderer, &scene, FILE_NAME);
         }
@@ -137,7 +142,7 @@ fn render_pixel<T: Renderer<J>, J: RayResolver>(renderer: &T, scene: &SceneData,
             let start = scene.camera_position;
             let _x: f32 = (x as f32/WIDTH_F-1f32)*ASPECT_RATIO;
             let _y: f32 = -(y as f32/HEIGHT_F-1f32);
-            let ray_dir = scene.get_look_matrix().multiply(utilities::Vector3::new(_x, _y, 0.75).normalized());
+            let ray_dir = scene.get_look_matrix().multiply(utilities::Vector3::new(_x, _y, FOV).normalized());
             renderer.render(start, ray_dir, scene.clone(), WIDTH, HEIGHT)
         }
         CameraTypes::Equirectangular => {
