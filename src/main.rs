@@ -19,10 +19,10 @@ use utilities::{Vector3, SceneData};
 use ray_resolver::RayResolver;
 use indicatif::{ProgressBar, ParallelProgressIterator, ProgressStyle};
 use exr::{prelude::*, image::rgba::Channel};
-use std::f32::consts::{PI, FRAC_PI_2, SQRT_2};
+use std::f32::consts::{PI, FRAC_PI_2};
 use rand_distr::Uniform;
 
-const WIDTH:u32 = 848;
+const WIDTH:u32 = 640;
 const HEIGHT:u32 = 480;
 
 const WIDTH_F:f32 = WIDTH as f32 / 2f32;
@@ -31,23 +31,23 @@ const HEIGHT_F:f32 = HEIGHT as f32 / 2f32;
 const ASPECT_RATIO:f32 = WIDTH_F / HEIGHT_F;
 
 const PIXELS: u32 = WIDTH * HEIGHT;
-const FOV: f32 = 0.75;
+const FOV: f32 = 1.2;
 
 
 enum Renderers{
     BasicRenderer,
-    PathTracer
+    PathTracer,
 }
 
-const RENDERER: Renderers = Renderers::PathTracer;
+const RENDERER: Renderers = Renderers::BasicRenderer;
 
 enum OutputFormats{
     PNG,
     OPENEXR
 }
 
-const OUTPUT_FORMAT: OutputFormats = OutputFormats::OPENEXR;
-const FILE_NAME: &str = "image.exr";
+const OUTPUT_FORMAT: OutputFormats = OutputFormats::PNG;
+const FILE_NAME: &str = "image.png";
 
 enum CameraTypes{
     Normal,
@@ -77,13 +77,13 @@ fn main() {
         Renderers::PathTracer => {
             let renderer = path_tracer::PathTracer{
                 resolver: resolver,
-                bounces: 4,
-                samples: 1000,
+                bounces: 5,
+                samples: 100,
                 epsilon: 0.0002f32,
                 contrast: 1f32/5f32,
                 brightness: -0.5,
                 depth_of_field: 3f32,
-                dof_distr: Uniform::new(-0.25, 0.25),
+                dof_distr: Uniform::new(-0.1, 0.1),
                 dof: true
             };
             save_render(&renderer, &scene, FILE_NAME);
@@ -105,7 +105,8 @@ fn save_render<T: Renderer<J>, J: RayResolver>(renderer: &T, scene: &SceneData, 
             let pixels: Vec<u8> = (0..PIXELS).into_par_iter().progress_with(bar).map(|i| {
                 let x = i % WIDTH;
                 let y = i / WIDTH;
-                let color = render_pixel(renderer, scene, x, y).pow(1f32/5f32).add_scalar(-0.5);
+                //TODO: better toneing
+                let color = if T::needs_toneing(){ render_pixel(renderer, scene, x, y).pow(1f32/5f32).add_scalar(-0.5)} else {render_pixel(renderer, scene, x, y)};
                 color.to_color_array().to_vec()
             }).flatten().collect();
             let image: ImageBuffer<image::Rgb<u8>, _> = ImageBuffer::from_vec(WIDTH, HEIGHT, pixels).unwrap();

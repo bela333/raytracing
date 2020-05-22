@@ -64,14 +64,17 @@ impl<T: RayResolver> Renderer<T> for PathTracer<T>{
         let mut rng = rand::thread_rng();
         let distr = Uniform::new(-0.5/height as f32, 0.5/height as f32);
         for _ in 0..self.samples{
-            /*let aa_jitter = Vector3::new(distr.sample(&mut rng), distr.sample(&mut rng), 0f32);
-            let dir_aa = dir.clone().add(aa_jitter);*/ //Anti-aliasing is unavailable because of the sky skipping code
-            let (c, i) = self.render_sample(&start, &dir, &scene);
+            let aa_jitter = Vector3::new(distr.sample(&mut rng), distr.sample(&mut rng), 0f32);
+            let dir_aa = dir.clone().add(aa_jitter); 
+            let (c, i) = self.render_sample(&start, &dir_aa, &scene);
             if i==0 {
                 break;
             }
             o = o.add(c);
         }
         o.multiply(1f32/(self.samples as f32))
+    }
+    fn needs_toneing() -> bool {
+        true
     }
 }

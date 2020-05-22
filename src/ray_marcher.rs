@@ -63,16 +63,16 @@ impl RayMarcher{
             5f32-SMALL_LIGHT_RADIUS), SMALL_LIGHT_RADIUS);
         
         //Red sphere
-        let sphere1 = SDFResult::new(_sphere1, Vector3::from_int(0xd65c33), Vector3::zero(), MaterialType::Diffuse);
+        let sphere1 = SDFResult::new(_sphere1, Vector3::from_int(0xd65c33).to_linear(), Vector3::zero(), MaterialType::Diffuse);
         //Reflective sphere
         let sphere2 = SDFResult::new(_sphere2, Vector3::new(1f32, 1f32, 1f32), Vector3::zero(), MaterialType::Reflective);
         //Blue sphere
-        let sphere3 = SDFResult::new(_sphere3, Vector3::from_int(0x6d59d4), Vector3::zero(), MaterialType::Diffuse);
-        let plane = SDFResult::new(_plane, Vector3::from_int(0x86de5d), Vector3::zero(), MaterialType::Diffuse);
+        let sphere3 = SDFResult::new(_sphere3, Vector3::from_int(0x6d59d4).to_linear(), Vector3::zero(), MaterialType::Diffuse);
+        let plane = SDFResult::new(_plane, Vector3::from_int(0x86de5d).to_linear(), Vector3::zero(), MaterialType::Diffuse);
         let lamp = SDFResult::new(
             _lamp,
             Vector3::new(0f32, 0f32, 0f32),
-            Vector3::from_int(0xc7fff6).multiply(100f32),
+            Vector3::from_int(0xc7fff6).to_linear().multiply(100f32),
             MaterialType::Diffuse
         );
         let cube = SDFResult::new(_cube, Vector3::from_single(1f32), Vector3::zero(), MaterialType::Diffuse);

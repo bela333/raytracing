@@ -20,6 +20,19 @@ impl Vector3{
         Self::new(r, g, b).restrict_values()
     }
 
+    pub fn to_linear(&self) -> Self{
+        /*Matrix3::new(
+        Vector3::new(0.4124564, 0.2126729, 0.0193339),
+        Vector3::new(0.3575761, 0.7151522, 0.1191920),
+        Vector3::new(0.1804375, 0.0721750, 0.9503041)
+        ).multiply(*self)*/
+        Self::new(
+            self.x.powf(2.2),
+            self.y.powf(2.2),
+            self.z.powf(2.2),
+        )
+    }
+
 
     pub fn largest_component(&self) -> Components{
         if self.x.abs() > self.y.abs() {
