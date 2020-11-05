@@ -221,7 +221,9 @@ impl Vector3{
 #[derive(Clone)]
 pub struct SceneData{
     pub camera_position: Vector3,
-    pub camera_target: Vector3
+    pub camera_target: Vector3,
+    pub fog_amount: f32,
+    pub fog: bool
 }
 
 impl SceneData{

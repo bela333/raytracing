@@ -40,10 +40,27 @@ impl<T: RayResolver> PathTracer<T>{
 
         let mut emit = Vector3::zero();
         let mut rad = Vector3::new(1f32, 1f32, 1f32);
+        let mut rng = rand::thread_rng();
         for i in 0..self.bounces{
-            match self.resolver.resolve(start, dir, scene.clone()) {
-                None => return (emit, i),
+            let random = Uniform::new(0f32, 1f32).sample(&mut rng);
+            let dust_dist = -random.ln()*scene.fog_amount;
+            match {
+                self.resolver.resolve(start, dir, scene.clone())} {
+                None => {
+                    //return (emit, i)
+                    if scene.fog{
+                        start = start.add(dir.multiply(dust_dist));
+                        dir = Vector3::random_on_sphere();
+                    }else{
+                        return (emit, i);
+                    }
+                },
                 Some(ray) => {
+                    if scene.fog && ray.pos.subtract(start).length() > dust_dist{
+                        start = start.add(dir.multiply(dust_dist));
+                        dir = Vector3::random_on_sphere();
+                        continue;
+                    }
                     emit = emit.add(rad.comp_multiply(ray.emit));
                     rad = rad.comp_multiply(ray.color.multiply(ray.normal.dot(dir.multiply(-1f32))));
                     dir = find_outgoing(ray.pos.subtract(start).normalized(), ray.normal, ray.t);

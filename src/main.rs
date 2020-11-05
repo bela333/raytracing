@@ -11,6 +11,7 @@ pub mod renderer;
 pub mod basic_renderer;
 pub mod utilities;
 pub mod path_tracer;
+mod config_parser;
 
 use crate::renderer::Renderer;
 use image::{ImageBuffer};
@@ -39,15 +40,15 @@ enum Renderers{
     PathTracer,
 }
 
-const RENDERER: Renderers = Renderers::BasicRenderer;
+const RENDERER: Renderers = Renderers::PathTracer;
 
 enum OutputFormats{
     PNG,
     OPENEXR
 }
 
-const OUTPUT_FORMAT: OutputFormats = OutputFormats::PNG;
-const FILE_NAME: &str = "image.png";
+const OUTPUT_FORMAT: OutputFormats = OutputFormats::OPENEXR;
+const FILE_NAME: &str = "image.exr";
 
 enum CameraTypes{
     Normal,
@@ -58,6 +59,9 @@ const CAMERA_TYPE: CameraTypes = CameraTypes::Normal;
 
 
 fn main() {
+
+    let config = config_parser::Config::get();
+
     let resolver = ray_marcher::RayMarcher{
         max_distance: 20f32,
         max_steps: 500,
@@ -65,7 +69,9 @@ fn main() {
     };
     let scene = utilities::SceneData{
         camera_position: Vector3::new(0f32, 0f32, 0f32),
-        camera_target: Vector3::new(0f32, 0f32, 1f32)
+        camera_target: Vector3::new(0f32, 0f32, 1f32),
+        fog_amount: 1000.0,
+        fog: true
     };
     match RENDERER{
         Renderers::BasicRenderer => {
@@ -84,7 +90,7 @@ fn main() {
                 brightness: -0.5,
                 depth_of_field: 3f32,
                 dof_distr: Uniform::new(-0.1, 0.1),
-                dof: true
+                dof: false
             };
             save_render(&renderer, &scene, FILE_NAME);
         }
