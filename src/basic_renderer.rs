@@ -12,6 +12,7 @@ impl<T: RayResolver> Renderer<T> for BasicRenderer<T>{
         match result{
             None => Vector3::zero(),
             Some(v) => {
+                
                 let lamp = Vector3::new(1f32, 1f32, 1f32);
                 let ambient = v.color.multiply(0.25);
                 let diffuse = v.color.multiply(Vector3::new(1f32, 1f32, 1f32).subtract(v.pos).normalized().dot(v.normal));
@@ -21,7 +22,7 @@ impl<T: RayResolver> Renderer<T> for BasicRenderer<T>{
                 let specular = if specular < 0f32 {0f32}else{specular};
                 let specular = specular.powf(5f32);
                 let specular = Vector3::from_single(specular);
-                ambient.add(diffuse).add(specular)
+                ambient.add(diffuse).add(specular).add(v.emit)
             }
         }
     }

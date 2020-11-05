@@ -13,6 +13,10 @@ pub enum Components{
 
 impl Vector3{
 
+    pub fn srgb(&self) -> Self{
+        self.pow(2.2f32)
+    }
+
     pub fn from_int(v: u32) -> Self{
         let r = (v >> 16 & 0xff) as f32 / 255f32;
         let g = (v >> 8 & 0xff) as f32 / 255f32;

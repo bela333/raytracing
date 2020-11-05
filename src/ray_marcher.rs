@@ -48,51 +48,52 @@ impl RayMarcher{
     
 
     fn get_sdf(&self, p: Vector3) -> SDFResult{
-        let _sphere1 = SDFResult::sphere_dist(p, Vector3::new(-1f32, 0f32, 3f32), 1f32);
-        let _sphere2 = SDFResult::sphere_dist(p, Vector3::new(1f32, 0f32, 3f32), 1f32);
-        let _sphere3 = SDFResult::sphere_dist(p, Vector3::new(0f32, 0f32, -1.2f32), 1f32);
-        let _plane = SDFResult::plane_dist(p, -1f32, self.epsilon*2f32);
-        let _lamp = SDFResult::plane_dist(p, 3f32, self.epsilon*2f32);
-        let _cube = -SDFResult::box_dist(p, 5f32);
-        const SMALL_LIGHT_RADIUS: f32 = 0.5;
-        let _small_light1 = SDFResult::sphere_dist(p, Vector3::new(5f32-SMALL_LIGHT_RADIUS,
-            -1f32+SMALL_LIGHT_RADIUS,
-            5f32-SMALL_LIGHT_RADIUS), SMALL_LIGHT_RADIUS);
-        let _small_light2 = SDFResult::sphere_dist(p, Vector3::new(SMALL_LIGHT_RADIUS-5f32,
-            -1f32+SMALL_LIGHT_RADIUS,
-            5f32-SMALL_LIGHT_RADIUS), SMALL_LIGHT_RADIUS);
-        
-        //Red sphere
-        let sphere1 = SDFResult::new(_sphere1, Vector3::from_int(0xd65c33).to_linear(), Vector3::zero(), MaterialType::Diffuse);
-        //Reflective sphere
-        let sphere2 = SDFResult::new(_sphere2, Vector3::new(1f32, 1f32, 1f32), Vector3::zero(), MaterialType::Reflective);
-        //Blue sphere
-        let sphere3 = SDFResult::new(_sphere3, Vector3::from_int(0x6d59d4).to_linear(), Vector3::zero(), MaterialType::Diffuse);
-        let plane = SDFResult::new(_plane, Vector3::from_int(0x86de5d).to_linear(), Vector3::zero(), MaterialType::Diffuse);
-        let lamp = SDFResult::new(
-            _lamp,
-            Vector3::new(0f32, 0f32, 0f32),
-            Vector3::from_int(0xc7fff6).to_linear().multiply(100f32),
+        let skybox = SDFResult::new(
+            -SDFResult::sphere_dist(p, Vector3::new(0f32, 0f32, 0f32), 100f32),
+            Vector3::zero(),
+            {
+                let y = p.normalized().y;
+                let t = y.sin()/2.0+0.5;
+                let color1: Vector3 = Vector3::from_int(0x3c9fc9).srgb();
+                let color2: Vector3 = Vector3::from_int(0xebf9ff).srgb();
+                color1.multiply(t).add(color2.multiply(1.0-t))
+            },
+            MaterialType::Reflective
+        );
+
+        let sphere = SDFResult::new(
+            SDFResult::sphere_dist(p, Vector3::new(0f32, 0.2f32, 2f32), 1f32),
+            Vector3::from_single(1f32),
+            Vector3::zero(),
+            MaterialType::Reflective
+        );
+        let plane = SDFResult::new(
+            SDFResult::plane_dist(p, -1.1, 0.1),
+            {
+                let x = p.x;
+                let y = p.z;
+
+                let x_index = x.floor() as i32;
+                let y_index = y.floor() as i32;
+
+                let val = (x_index^y_index) & 1;
+                if val == 0{
+                    Vector3::zero()
+                }else{
+                    Vector3::from_single(1f32)
+                }
+            },
+            Vector3::zero(),
             MaterialType::Diffuse
         );
-        let cube = SDFResult::new(_cube, Vector3::from_single(1f32), Vector3::zero(), MaterialType::Diffuse);
-        let small_light1 = SDFResult::new(
-            _small_light1,
+        let lamp = SDFResult::new(
+            SDFResult::sphere_dist(p, Vector3::new(1.3, 3.0, -0.2), 0.5),
             Vector3::zero(),
-            Vector3::new(1f32, 0f32, 0f32).multiply(200f32),
-            MaterialType::Reflective
-        );
-        let small_light2 = SDFResult::new(
-            _small_light2,
-            Vector3::zero(),
-            Vector3::new(0f32, 0f32, 1f32).multiply(200f32),
-            MaterialType::Reflective
+            Vector3::from_int(0xfffee3).srgb().multiply(10.0*4.0),
+            MaterialType::Diffuse
         );
 
-        
-
-        sphere1.union(plane).union(lamp).union(sphere2).union(cube).union(sphere3).union(small_light1).union(small_light2)
-        //sphere1.union(plane).union(sphere2).union(cube).union(sphere3).union(small_light1).union(small_light2)
+        return skybox.union(sphere).union(plane).union(lamp);
     }
 
     pub fn get_normal(&self, pos: Vector3) -> Vector3 {

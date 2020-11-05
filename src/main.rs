@@ -23,8 +23,8 @@ use exr::{prelude::*, image::rgba::Channel};
 use std::f32::consts::{PI, FRAC_PI_2};
 use rand_distr::Uniform;
 
-const WIDTH:u32 = 640;
-const HEIGHT:u32 = 480;
+const WIDTH:u32 = 1920;
+const HEIGHT:u32 = 1080;
 
 const WIDTH_F:f32 = WIDTH as f32 / 2f32;
 const HEIGHT_F:f32 = HEIGHT as f32 / 2f32;
@@ -47,8 +47,8 @@ enum OutputFormats{
     OPENEXR
 }
 
-const OUTPUT_FORMAT: OutputFormats = OutputFormats::OPENEXR;
-const FILE_NAME: &str = "image.exr";
+const OUTPUT_FORMAT: OutputFormats = OutputFormats::PNG;
+const FILE_NAME: &str = "image.png";
 
 enum CameraTypes{
     Normal,
@@ -60,11 +60,9 @@ const CAMERA_TYPE: CameraTypes = CameraTypes::Normal;
 
 fn main() {
 
-    let config = config_parser::Config::get();
-
     let resolver = ray_marcher::RayMarcher{
-        max_distance: 20f32,
-        max_steps: 500,
+        max_distance: 150f32,
+        max_steps: 1000,
         epsilon: 0.0002f32
     };
     let scene = utilities::SceneData{
@@ -84,7 +82,7 @@ fn main() {
             let renderer = path_tracer::PathTracer{
                 resolver: resolver,
                 bounces: 5,
-                samples: 100,
+                samples: 500,
                 epsilon: 0.0002f32,
                 contrast: 1f32/5f32,
                 brightness: -0.5,
@@ -112,7 +110,15 @@ fn save_render<T: Renderer<J>, J: RayResolver>(renderer: &T, scene: &SceneData, 
                 let x = i % WIDTH;
                 let y = i / WIDTH;
                 //TODO: better toneing
-                let color = if T::needs_toneing(){ render_pixel(renderer, scene, x, y).pow(1f32/5f32).add_scalar(-0.5)} else {render_pixel(renderer, scene, x, y)};
+                let color = if T::needs_toneing(){
+                    let color = render_pixel(renderer, scene, x, y);
+                    let color_g = color.pow(1f32/2.2f32);
+                    let lum = color_g.x * 0.2126 + color_g.y * 0.7152 + color_g.z * 0.0722;
+                    let color = color.multiply(2.0/(lum+1.0));
+                    color.pow(1f32/2.2f32)
+                } else {
+                    render_pixel(renderer, scene, x, y)
+                };
                 color.to_color_array().to_vec()
             }).flatten().collect();
             let image: ImageBuffer<image::Rgb<u8>, _> = ImageBuffer::from_vec(WIDTH, HEIGHT, pixels).unwrap();
