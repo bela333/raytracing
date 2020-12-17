@@ -1,5 +1,7 @@
 use rand_distr::{UnitSphere, Distribution};
 
+use crate::snapshot::Snapshot;
+
 #[derive(Copy, Clone)]
 pub struct Vector3{
     pub x: f32,
@@ -227,7 +229,10 @@ pub struct SceneData{
     pub camera_position: Vector3,
     pub camera_target: Vector3,
     pub fog_amount: f32,
-    pub fog: bool
+    pub fog: bool,
+    pub snapshot1: Snapshot,
+    pub snapshot2: Snapshot,
+    pub transform: f32
 }
 
 impl SceneData{
