@@ -14,17 +14,22 @@ impl<T: RayResolver> Renderer<T> for BasicRenderer<T>{
             Some(v) => {
                 
                 let lamp = Vector3::new(1f32, 1f32, 1f32);
-                let ambient = v.color.multiply(0.25);
-                let diffuse = v.color.multiply(Vector3::new(1f32, 1f32, 1f32).subtract(v.pos).normalized().dot(v.normal));
+                let ambient = v.color.multiply(0.1);
                 let lamp_dir = lamp.subtract(v.pos);
+                let diffuse = v.color.multiply(lamp_dir.normalized().dot(v.normal).max(0.0));
                 let specular = lamp_dir.reflect(v.normal).dot(dir.multiply(-1f32));
                 let specular = if lamp_dir.dot(v.normal) < 0f32 {0f32}else{specular};
                 let specular = if specular < 0f32 {0f32}else{specular};
-                let specular = specular.powf(5f32);
+                let specular = specular.powf(100f32);
                 let specular = Vector3::from_single(specular);
-                ambient.add(diffuse).add(specular).add(v.emit)
+                if v.emit.x == 0.0 || v.emit.y == 0.0 || v.emit.z == 0.0{
+                    ambient.add(diffuse).add(specular).add(v.emit)
+                }
+                else{
+                    v.emit
+                }
             }
         }
     }
-    fn needs_toneing() -> bool {false}
+    fn needs_toneing() -> bool {true}
 }

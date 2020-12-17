@@ -61,7 +61,7 @@ impl RayMarcher{
         }-0.1;
         let cubes = SDFResult::new(
             cube_dist,
-            Vector3::from_int(0xa46eeb).srgb(),
+            Vector3::from_int(0xb01717).srgb(),
             Vector3::zero(),
             MaterialType::Diffuse
         );

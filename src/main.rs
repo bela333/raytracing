@@ -23,8 +23,8 @@ use indicatif::{ProgressBar, ParallelProgressIterator, ProgressStyle};
 use std::f32::consts::{PI, FRAC_PI_2};
 use rand_distr::Uniform;
 
-const WIDTH:u32 = 128;
-const HEIGHT:u32 = 128;
+const WIDTH:u32 = 1920;
+const HEIGHT:u32 = 1080;
 
 const FOV: f32 = 1.2;
 const FPS:u32 = 30;
@@ -46,7 +46,7 @@ enum Renderers{
     PathTracer,
 }
 
-const RENDERER: Renderers = Renderers::PathTracer;
+const RENDERER: Renderers = Renderers::BasicRenderer;
 
 fn main() {
     let resolver = ray_marcher::RayMarcher{
@@ -81,10 +81,9 @@ fn main() {
 
 
 fn render_video<T: Renderer<J>, J:RayResolver>(renderer: &T) where T: std::marker::Sync{
-    let center_x = 1.0;
-    let center_y = 1.0;
+    let def_cam = Vector3::new(1.0, 1.0, 0f32);
     let mut scene = utilities::SceneData{
-        camera_position: Vector3::new(center_x, center_y, 0f32),
+        camera_position: def_cam.clone(),
         camera_target: Vector3::new(1f32, 1f32, 0f32),
         fog_amount: 0.0,
         fog: false,
@@ -95,8 +94,9 @@ fn render_video<T: Renderer<J>, J:RayResolver>(renderer: &T) where T: std::marke
     let frame_count = (FPS as f32*DURATION) as i32;
     let mut last_id = 0;
     for frame_number in 0..frame_count{
-        //let t = frame_number as f32 / FPS as f32;
-        let t = 5.5;
+        let t = frame_number as f32 / FPS as f32;
+        //let t = 5.5;
+        //let frame_number = 0;
         let id = (t/SNAPSHOT_DURATION) as u32;
         if id > last_id{
             //Reload files
@@ -107,10 +107,13 @@ fn render_video<T: Renderer<J>, J:RayResolver>(renderer: &T) where T: std::marke
             scene.snapshot2 = Snapshot::read(f2.as_str());
             last_id = id;
         }
-        let t_trig = (t/DURATION)*2.0*PI*45./360.;
-        let (cam_x, cam_z) = t_trig.sin_cos();
-        scene.camera_position.x = cam_x*10.0+center_x;
-        scene.camera_position.z = cam_z*10.0;
+        let t_trig = (t/DURATION)*2.0*PI;
+        let (cam_x, cam_z) = (-t_trig*120./360.+60./180.*PI).sin_cos();
+        let lift = -t_trig*60./360.+30./180.*PI;
+        let (lift_sin, lift_cos) = lift.sin_cos();
+        scene.camera_position = Vector3::new(cam_x, 0.0, cam_z).multiply(lift_cos);
+        scene.camera_position.y = lift_sin;
+        scene.camera_position = scene.camera_position.multiply(10.0).add(def_cam);
         scene.transform  = (t/SNAPSHOT_DURATION).fract();
         save_render(renderer, &scene, format!("frames/image{}.png", frame_number).as_str());
     }
