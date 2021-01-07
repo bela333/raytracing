@@ -66,10 +66,11 @@ fn main() {
         epsilon: 0.0002f32
     };
     let scene = utilities::SceneData{
-        camera_position: Vector3::new(0f32, 0f32, 0f32),
-        camera_target: Vector3::new(0f32, 0f32, 1f32),
+        camera_position: Vector3::new(0f32, 0.2f32, 2f32).subtract(Vector3::new(0f32, 0.1f32, 4f32)).multiply(2f32).add(Vector3::new(0f32, 0.1f32, 4f32))
+            .add(Vector3::new(0f32, 0f32, -2f32)),
+        camera_target: Vector3::new(0f32, 0.1f32, 4f32),
         fog_amount: 1000.0,
-        fog: true
+        fog: false
     };
     match RENDERER{
         Renderers::BasicRenderer => {

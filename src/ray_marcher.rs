@@ -9,6 +9,7 @@ pub struct RayMarcher{
 }
 
 
+#[derive(Clone)]
 pub struct SDFResult{
     dist: f32,
     color: Vector3,
@@ -45,9 +46,7 @@ impl SDFResult{
 }
 
 impl RayMarcher{
-    
-
-    fn get_sdf(&self, p: Vector3) -> SDFResult{
+    fn scene(&self, p: Vector3, refraction: bool) -> SDFResult{
         let skybox = SDFResult::new(
             -SDFResult::sphere_dist(p, Vector3::new(0f32, 0f32, 0f32), 100f32),
             Vector3::zero(),
@@ -65,7 +64,13 @@ impl RayMarcher{
             SDFResult::sphere_dist(p, Vector3::new(0f32, 0.2f32, 2f32), 1f32),
             Vector3::from_single(1f32),
             Vector3::zero(),
-            MaterialType::Reflective
+            MaterialType::Glass(if refraction{1.52/1.000293}else{1.000293/1.52})
+        );
+        let cube = SDFResult::new(
+            SDFResult::box_dist(p.subtract(Vector3::new(-1f32, 0.1f32, 4f32)), 0.75f32),
+            Vector3::from_int(0xbd6ce6).srgb(),
+            Vector3::zero(),
+            MaterialType::Diffuse
         );
         let plane = SDFResult::new(
             SDFResult::plane_dist(p, -1.1, 0.1),
@@ -93,39 +98,47 @@ impl RayMarcher{
             MaterialType::Diffuse
         );
 
-        return skybox.union(sphere).union(plane).union(lamp);
+        skybox.union(sphere).union(plane).union(lamp).union(cube)
     }
 
-    pub fn get_normal(&self, pos: Vector3) -> Vector3 {
+    fn get_sdf(&self, p: Vector3, refraction: bool) -> SDFResult{
+        let mut v = self.scene(p, refraction);
+        if refraction{
+            v.dist = -v.dist;
+        }
+        return v;
+    }
+
+    pub fn get_normal(&self, pos: Vector3, refraction: bool) -> Vector3 {
         let x_probe = Vector3::new(self.epsilon, 0f32, 0f32);
-        let x_delta = self.get_sdf(pos.add(x_probe)).dist - self.get_sdf(pos.subtract(x_probe)).dist;
+        let x_delta = self.get_sdf(pos.add(x_probe), refraction).dist - self.get_sdf(pos.subtract(x_probe), refraction).dist;
 
         let y_probe = Vector3::new(0f32, self.epsilon, 0f32);
-        let y_delta = self.get_sdf(pos.add(y_probe)).dist - self.get_sdf(pos.subtract(y_probe)).dist;
+        let y_delta = self.get_sdf(pos.add(y_probe), refraction).dist - self.get_sdf(pos.subtract(y_probe), refraction).dist;
 
         let z_probe = Vector3::new(0f32, 0f32, self.epsilon);
-        let z_delta = self.get_sdf(pos.add(z_probe)).dist - self.get_sdf(pos.subtract(z_probe)).dist;
+        let z_delta = self.get_sdf(pos.add(z_probe), refraction).dist - self.get_sdf(pos.subtract(z_probe), refraction).dist;
 
         Vector3::new(x_delta, y_delta, z_delta).normalized()
     }
 }
 
 impl RayResolver for RayMarcher{
-    fn resolve(&self, pos: Vector3, dir: Vector3, scene: SceneData) -> Option<RayResult> {
+    fn resolve(&self, pos: Vector3, dir: Vector3, refraction: bool, scene: SceneData) -> Option<RayResult> {
         let mut dist = 0f32;
         let mut p = pos;
         for _ in 0..self.max_steps{
             if dist > self.max_distance {
                 return None;
             }
-            let sdf_value = self.get_sdf(p);
+            let sdf_value = self.get_sdf(p, refraction);
             dist += sdf_value.dist;
             p = pos.add(dir.multiply(dist));
             if sdf_value.dist < self.epsilon {
                 return Some(RayResult{
                     pos: p,
                     color: sdf_value.color,
-                    normal: self.get_normal(p),
+                    normal: self.get_normal(p, refraction),
                     emit: sdf_value.emit,
                     t: sdf_value.t
                 });

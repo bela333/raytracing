@@ -18,7 +18,9 @@ pub struct PathTracer<T>{
 fn find_outgoing(incoming: Vector3, normal: Vector3, material: MaterialType) -> Vector3{
     match material {
         MaterialType::Diffuse => Vector3::random_on_hemisphere(normal),
-        MaterialType::Reflective => incoming.reflect(normal)
+        MaterialType::Reflective => incoming.reflect(normal),
+        MaterialType::Lens => Vector3::zero().subtract(normal),
+        MaterialType::Glass(ior) => incoming.refract(normal, ior),
     }
 }
 
@@ -41,11 +43,12 @@ impl<T: RayResolver> PathTracer<T>{
         let mut emit = Vector3::zero();
         let mut rad = Vector3::new(1f32, 1f32, 1f32);
         let mut rng = rand::thread_rng();
+        let mut refraction = false;
         for i in 0..self.bounces{
             let random = Uniform::new(0f32, 1f32).sample(&mut rng);
             let dust_dist = -random.ln()*scene.fog_amount;
             match {
-                self.resolver.resolve(start, dir, scene.clone())} {
+                self.resolver.resolve(start, dir, refraction, scene.clone())} {
                 None => {
                     //return (emit, i)
                     if scene.fog{
@@ -68,6 +71,11 @@ impl<T: RayResolver> PathTracer<T>{
                     if rad.x == 0f32 && rad.y == 0f32 && rad.z == 0f32 {
                         break;
                     }
+                    if dir.dot(ray.normal.clone()) < 0f32{
+                        //Refraction
+                        refraction = !refraction;
+                        start = start.subtract(ray.normal.multiply(4f32*self.epsilon))
+                    }
                 }
             }
         }
@@ -84,9 +92,6 @@ impl<T: RayResolver> Renderer<T> for PathTracer<T>{
             let aa_jitter = Vector3::new(distr.sample(&mut rng), distr.sample(&mut rng), 0f32);
             let dir_aa = dir.clone().add(aa_jitter); 
             let (c, i) = self.render_sample(&start, &dir_aa, &scene);
-            if i==0 {
-                break;
-            }
             o = o.add(c);
         }
         o.multiply(1f32/(self.samples as f32))

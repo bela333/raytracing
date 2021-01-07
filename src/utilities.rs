@@ -220,6 +220,16 @@ impl Vector3{
             self.z.min(a.z),
         )
     }
+    //TODO: Verify accuracy
+    pub fn refract(&self, n: Self, eta: f32) -> Self{
+        let dotni = self.dot(n);
+        let k = 1f32 - eta * eta * (1f32 - dotni * dotni);
+        if k < 0f32{
+            return Vector3::zero();
+        }else{
+            return self.multiply(eta).subtract(n.multiply(k.sqrt() + eta * self.dot(n)));
+        }
+    }
 }
 
 #[derive(Clone)]

@@ -8,7 +8,7 @@ pub struct BasicRenderer<T>{
 
 impl<T: RayResolver> Renderer<T> for BasicRenderer<T>{
     fn render(&self, start: Vector3, dir: Vector3, scene: SceneData, _: u32, _: u32) -> Vector3 {
-        let result = self.resolver.resolve(start, dir, scene);
+        let result = self.resolver.resolve(start, dir, false, scene);
         match result{
             None => Vector3::zero(),
             Some(v) => {

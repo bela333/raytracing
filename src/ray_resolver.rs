@@ -1,13 +1,15 @@
 use crate::utilities::{Vector3, SceneData};
 
 pub trait RayResolver{
-    fn resolve(&self, pos: Vector3, dir: Vector3, scene: SceneData) -> Option<RayResult>;
+    fn resolve(&self, pos: Vector3, dir: Vector3, refraction: bool, scene: SceneData) -> Option<RayResult>;
 }
 
 #[derive(Clone)]
 pub enum MaterialType{
     Diffuse,
-    Reflective
+    Reflective,
+    Lens,
+    Glass(f32)
 }
 
 pub struct RayResult{
