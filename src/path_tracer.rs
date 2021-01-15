@@ -65,8 +65,8 @@ impl<T: RayResolver> PathTracer<T>{
                         continue;
                     }
                     emit = emit.add(rad.comp_multiply(ray.emit));
-                    rad = rad.comp_multiply(ray.color.multiply(ray.normal.dot(dir.multiply(-1f32))));
                     dir = find_outgoing(ray.pos.subtract(start).normalized(), ray.normal, ray.t);
+                    rad = rad.comp_multiply(ray.color.multiply(ray.normal.dot(dir)));
                     start = ray.pos.add(ray.normal.multiply(self.epsilon*2f32));
                     if rad.x == 0f32 && rad.y == 0f32 && rad.z == 0f32 {
                         break;
