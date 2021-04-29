@@ -49,18 +49,6 @@ impl SDFResult {
 
 impl RayMarcher {
     fn scene(&self, p: Vector3, refraction: bool) -> SDFResult {
-        let skybox = SDFResult::new(
-            -SDFResult::sphere_dist(p, Vector3::new(0f32, 0f32, 0f32), 100f32),
-            Vector3::zero(),
-            {
-                let y = p.normalized().y;
-                let t = y.sin() / 2.0 + 0.5;
-                let color1: Vector3 = Vector3::from_int(0x3c9fc9).srgb();
-                let color2: Vector3 = Vector3::from_int(0xebf9ff).srgb();
-                color1.multiply(t).add(color2.multiply(1.0 - t))
-            },
-            MaterialType::Reflective,
-        );
 
         let sphere = SDFResult::new(
             SDFResult::sphere_dist(p, Vector3::new(0f32, 0.2f32, 2f32), 1f32),
@@ -104,7 +92,7 @@ impl RayMarcher {
             MaterialType::Diffuse,
         );
 
-        skybox.union(sphere).union(plane).union(cube)
+        sphere.union(plane).union(cube)
     }
 
     fn get_sdf(&self, p: Vector3, refraction: bool) -> SDFResult {

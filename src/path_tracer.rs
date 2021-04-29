@@ -54,6 +54,13 @@ impl<T: RayResolver> PathTracer<T> {
                         start = start.add(dir.multiply(dust_dist));
                         dir = Vector3::random_on_sphere();
                     } else {
+                        let color = {
+                            let t = dir.y.sin() / 2.0 + 0.5;
+                            let color1: Vector3 = Vector3::from_int(0x3c9fc9).srgb();
+                            let color2: Vector3 = Vector3::from_int(0xebf9ff).srgb();
+                            color1.multiply(t).add(color2.multiply(1.0 - t))
+                        };
+                        let emit = emit.add(rad.comp_multiply(color));
                         return (emit, i);
                     }
                 }
