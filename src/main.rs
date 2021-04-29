@@ -14,13 +14,13 @@ pub mod renderer;
 pub mod utilities;
 
 use crate::renderer::Renderer;
-use exr::{image::rgba::Channel, prelude::*};
+use exr::{image::{read::specific_channels}, prelude::*};
 use image::ImageBuffer;
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
 use rand_distr::Uniform;
 use ray_resolver::RayResolver;
 use rayon::prelude::*;
-use std::f32::consts::{FRAC_PI_2, PI};
+use std::{f32::consts::{FRAC_PI_2, PI}, usize};
 use utilities::{SceneData, Vector3};
 
 const WIDTH: u32 = 1920 / 2;
@@ -46,8 +46,8 @@ enum OutputFormats {
     OPENEXR,
 }
 
-const OUTPUT_FORMAT: OutputFormats = OutputFormats::PNG;
-const FILE_NAME: &str = "image.png";
+const OUTPUT_FORMAT: OutputFormats = OutputFormats::OPENEXR;
+const FILE_NAME: &str = "image.exr";
 
 enum CameraTypes {
     Normal,
@@ -144,18 +144,13 @@ where
                 })
                 .collect();
             println!("\n\nWriting to {}", file_name);
-            let image_info = rgba::ImageInfo::rgb(
-                (WIDTH as usize, HEIGHT as usize),
-                Channel::linear(SampleType::F32),
-            );
-            image_info
-                .with_encoding(rgba::Encoding::for_compression(Compression::RLE))
-                .write_pixels_to_file(file_name, write_options::high(), &|pos: Vec2<usize>| {
-                    let i = pos.0 + pos.1 * WIDTH as usize;
-                    let c = pixels[i];
-                    rgba::Pixel::rgb(c.x, c.y, c.z)
-                })
-                .unwrap();
+            let layer = Layer::new((WIDTH as usize, HEIGHT as usize), LayerAttributes::default(), Encoding::SMALL_FAST_LOSSY, SpecificChannels::rgb(|pos: Vec2<usize>|{
+                let i = pos.0 + pos.1 * WIDTH as usize;
+                let c = pixels[i];
+                (c.x, c.y, c.z)
+            }));
+            let image = Image::from_layer(layer);
+            image.write().to_file(file_name).unwrap();
         }
     }
 }
