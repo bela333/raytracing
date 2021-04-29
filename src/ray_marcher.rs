@@ -50,49 +50,28 @@ impl SDFResult {
 impl RayMarcher {
     fn scene(&self, p: Vector3, refraction: bool) -> SDFResult {
 
-        let sphere = SDFResult::new(
-            SDFResult::sphere_dist(p, Vector3::new(0f32, 0.2f32, 2f32), 1f32),
-            Vector3::from_single(1f32),
+        let sphere1 = SDFResult::new(
+            SDFResult::sphere_dist(p, Vector3::new(0f32, 0.0f32, 4f32), 1.5),
+           Vector3::from_single(1.0),
+           Vector3::zero(),
+           MaterialType::Diffuse);
+        let sphere2 = SDFResult::new(
+            SDFResult::sphere_dist(p, Vector3::new(-3f32, 0.0f32, 4f32), 1.5),
+           Vector3::from_single(1.0),
+           Vector3::zero(),
+           MaterialType::Reflective);
+        let sphere3 = SDFResult::new(
+            SDFResult::sphere_dist(p, Vector3::new(3f32, 0.0f32, 4f32), 1.5),
+            Vector3::from_int(0xebbdb9).srgb(),
             Vector3::zero(),
-            MaterialType::Glass(if refraction {
-                1.52 / 1.000293
-            } else {
-                1.000293 / 1.52
-            }),
-        );
-        let cube = SDFResult::new(
-            SDFResult::box_dist(p.subtract(Vector3::new(-1f32, 0.1f32, 4f32)), 0.75f32),
-            Vector3::from_int(0xbd6ce6).srgb(),
-            Vector3::zero(),
-            MaterialType::Diffuse,
-        );
-        let plane = SDFResult::new(
-            SDFResult::plane_dist(p, -1.1, 0.1),
-            {
-                let x = p.x;
-                let y = p.z;
+            MaterialType::Glass(if refraction{1.52/1.000293}else{1.000293/1.52}));
+        let sphere4 = SDFResult::new(
+            SDFResult::sphere_dist(p, Vector3::new(3f32, 0.0f32, 4f32), 1.5),
+           Vector3::from_single(1.0),
+           Vector3::zero(),
+           MaterialType::Glass(if refraction{1.52/1.000293}else{1.000293/1.52}));
 
-                let x_index = x.floor() as i32;
-                let y_index = y.floor() as i32;
-
-                let val = (x_index ^ y_index) & 1;
-                if val == 0 {
-                    Vector3::zero()
-                } else {
-                    Vector3::from_single(1f32)
-                }
-            },
-            Vector3::zero(),
-            MaterialType::Diffuse,
-        );
-        let lamp = SDFResult::new(
-            SDFResult::sphere_dist(p, Vector3::new(1.3, 3.0, -0.2), 0.5),
-            Vector3::zero(),
-            Vector3::from_int(0xfffee3).srgb().multiply(10.0 * 4.0),
-            MaterialType::Diffuse,
-        );
-
-        sphere.union(plane).union(cube)
+        sphere1.union(sphere2).union(sphere3)
     }
 
     fn get_sdf(&self, p: Vector3, refraction: bool) -> SDFResult {

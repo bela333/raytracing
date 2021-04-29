@@ -23,8 +23,8 @@ use rayon::prelude::*;
 use std::{f32::consts::{FRAC_PI_2, PI}, usize};
 use utilities::{SceneData, Vector3};
 
-const WIDTH: u32 = 1920 / 2;
-const HEIGHT: u32 = 1080 / 2;
+const WIDTH: u32 = 1920;
+const HEIGHT: u32 = 1080;
 
 const WIDTH_F: f32 = WIDTH as f32 / 2f32;
 const HEIGHT_F: f32 = HEIGHT as f32 / 2f32;
@@ -46,8 +46,8 @@ enum OutputFormats {
     OPENEXR,
 }
 
-const OUTPUT_FORMAT: OutputFormats = OutputFormats::OPENEXR;
-const FILE_NAME: &str = "image.exr";
+const OUTPUT_FORMAT: OutputFormats = OutputFormats::PNG;
+const FILE_NAME: &str = "image.png";
 
 enum CameraTypes {
     Normal,
@@ -78,16 +78,28 @@ fn main() {
             save_render(&renderer, &scene, FILE_NAME);
         }
         Renderers::PathTracer => {
+            let skybox = read().no_deep_data().largest_resolution_level().rgba_channels(|resolution, _|{
+                let p = [0.0; 4];
+                let line = vec![p; resolution.width()];
+                let img = vec![line; resolution.height()];
+                img
+            }, |img, pos, (r, g, b, a): (f32, f32, f32, f32)|{
+                img[pos.y()][pos.x()] = [r, g, b, a];
+            }).first_valid_layer().all_attributes().from_file("env.exr").unwrap();
+            let pixels: Vec<Vec<[f32; 4]>> = skybox.layer_data.channel_data.pixels;
+            let s = (pixels.first().unwrap().len(), pixels.len());
             let renderer = path_tracer::PathTracer {
                 resolver: resolver,
                 bounces: 5,
-                samples: 100,
+                samples: 500,
                 epsilon: 0.0002f32,
                 contrast: 1f32 / 5f32,
                 brightness: -0.5,
-                depth_of_field: 5f32,
-                dof_distr: Uniform::new(-0.05, 0.05),
-                dof: true,
+                depth_of_field: 4f32,
+                dof_distr: Uniform::new(-0.075, 0.075),
+                dof: false,
+                skybox_size: s,
+                skybox: pixels,
             };
             save_render(&renderer, &scene, FILE_NAME);
         }

@@ -1,3 +1,5 @@
+use std::{f32::consts::PI, usize};
+
 use crate::ray_resolver::{MaterialType, RayResolver};
 use crate::renderer::Renderer;
 use crate::utilities::{SceneData, Vector3};
@@ -13,6 +15,8 @@ pub struct PathTracer<T> {
     pub depth_of_field: f32,
     pub dof_distr: Uniform<f32>,
     pub dof: bool,
+    pub skybox: Vec<Vec<[f32; 4]>>,
+    pub skybox_size: (usize, usize),
 }
 
 fn find_outgoing(incoming: Vector3, normal: Vector3, material: MaterialType) -> Vector3 {
@@ -54,11 +58,14 @@ impl<T: RayResolver> PathTracer<T> {
                         start = start.add(dir.multiply(dust_dist));
                         dir = Vector3::random_on_sphere();
                     } else {
+                        //Render skybox
                         let color = {
-                            let t = dir.y.sin() / 2.0 + 0.5;
-                            let color1: Vector3 = Vector3::from_int(0x3c9fc9).srgb();
-                            let color2: Vector3 = Vector3::from_int(0xebf9ff).srgb();
-                            color1.multiply(t).add(color2.multiply(1.0 - t))
+                            let x = ((dir.x.atan2(dir.z)/PI + 1.0) * 0.5 * (self.skybox_size.0-1) as f32) as usize;
+                            let y = (((-dir.y).asin()/(PI/2.0)+1.0)*0.5 * (self.skybox_size.1-1) as f32) as usize;
+                            let x = x.clamp(0, self.skybox_size.0-1);
+                            let y = y.clamp(0, self.skybox_size.1-1);
+                            let v = self.skybox[y][x];
+                            Vector3::new(v[0], v[1], v[2])
                         };
                         let emit = emit.add(rad.comp_multiply(color));
                         return (emit, i);
