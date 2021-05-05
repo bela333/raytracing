@@ -1,7 +1,7 @@
 /target
 **/*.rs.bk
-image.png
 images
 *.mp4
 *.exr
 *.png
+!image.png
