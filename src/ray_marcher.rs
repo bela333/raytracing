@@ -5,6 +5,7 @@ pub struct RayMarcher {
     pub max_steps: u32,
     pub max_distance: f32,
     pub epsilon: f32,
+    pub scene: fn(Vector3, bool) -> SDFResult
 }
 
 #[derive(Clone)]
@@ -48,34 +49,11 @@ impl SDFResult {
 }
 
 impl RayMarcher {
-    fn scene(&self, p: Vector3, refraction: bool) -> SDFResult {
 
-        let sphere1 = SDFResult::new(
-            SDFResult::sphere_dist(p, Vector3::new(0f32, 0.0f32, 4f32), 1.5),
-           Vector3::from_single(1.0),
-           Vector3::zero(),
-           MaterialType::Diffuse);
-        let sphere2 = SDFResult::new(
-            SDFResult::sphere_dist(p, Vector3::new(-3f32, 0.0f32, 4f32), 1.5),
-           Vector3::from_single(1.0),
-           Vector3::zero(),
-           MaterialType::Reflective);
-        let sphere3 = SDFResult::new(
-            SDFResult::sphere_dist(p, Vector3::new(3f32, 0.0f32, 4f32), 1.5),
-            Vector3::from_int(0xebbdb9).srgb(),
-            Vector3::zero(),
-            MaterialType::Glass(if refraction{1.52/1.000293}else{1.000293/1.52}));
-        let sphere4 = SDFResult::new(
-            SDFResult::sphere_dist(p, Vector3::new(3f32, 0.0f32, 4f32), 1.5),
-           Vector3::from_single(1.0),
-           Vector3::zero(),
-           MaterialType::Glass(if refraction{1.52/1.000293}else{1.000293/1.52}));
-
-        sphere1.union(sphere2).union(sphere3)
-    }
 
     fn get_sdf(&self, p: Vector3, refraction: bool) -> SDFResult {
-        let mut v = self.scene(p, refraction);
+        let scene = self.scene;
+        let mut v = scene(p, refraction);
         if refraction {
             v.dist = -v.dist;
         }

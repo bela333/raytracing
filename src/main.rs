@@ -12,6 +12,8 @@ pub mod ray_marcher;
 pub mod ray_resolver;
 pub mod renderer;
 pub mod utilities;
+pub mod bvh;
+mod scene;
 
 use crate::renderer::Renderer;
 use exr::{image::{read::specific_channels}, prelude::*};
@@ -20,6 +22,7 @@ use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
 use rand_distr::Uniform;
 use ray_resolver::RayResolver;
 use rayon::prelude::*;
+use scene::get_resolver;
 use std::{f32::consts::{FRAC_PI_2, PI}, usize};
 use utilities::{SceneData, Vector3};
 
@@ -57,11 +60,7 @@ enum CameraTypes {
 const CAMERA_TYPE: CameraTypes = CameraTypes::Normal;
 
 fn main() {
-    let resolver = ray_marcher::RayMarcher {
-        max_distance: 150f32,
-        max_steps: 1000,
-        epsilon: 0.0002f32,
-    };
+    let resolver = get_resolver();
     let scene = utilities::SceneData {
         camera_position: Vector3::new(0f32, 0.2f32, 2f32)
             .subtract(Vector3::new(0f32, 0.1f32, 4f32))

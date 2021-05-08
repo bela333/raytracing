@@ -198,6 +198,14 @@ impl Vector3 {
                 .subtract(n.multiply(k.sqrt() + eta * self.dot(n)));
         }
     }
+
+    pub fn reciprocal(&self) -> Self{
+        Self{
+            x: 1.0/self.x,
+            y: 1.0/self.y,
+            z: 1.0/self.z,
+        }
+    }
 }
 
 #[derive(Clone)]
