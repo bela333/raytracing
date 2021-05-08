@@ -1,5 +1,3 @@
-use std::f32::EPSILON;
-
 use crate::{ray_resolver::RayResolver, utilities::Vector3};
 
 #[derive(Clone, Copy)]
@@ -115,10 +113,7 @@ pub struct AABBRayResolver {
 impl AABBRayResolver {
     pub fn new<T: RayResolver + Sync + 'static>(aabb: AABB, inner: T) -> Self {
         let inner = Box::new(inner);
-        Self {
-            aabb: aabb,
-            inner: inner,
-        }
+        Self { aabb, inner }
     }
 }
 

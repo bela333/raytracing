@@ -125,8 +125,8 @@ impl RayResolver for TriangleResolver {
         &self,
         pos: Vector3,
         dir: Vector3,
-        refraction: bool,
-        scene: crate::utilities::SceneData,
+        _refraction: bool,
+        _scene: crate::utilities::SceneData,
     ) -> Option<RayResult> {
         match self.triangle.trace(&pos, &dir) {
             Some((hit, u, v)) => {

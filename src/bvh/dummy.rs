@@ -10,8 +10,8 @@ impl RayResolver for Dummy {
         &self,
         pos: crate::utilities::Vector3,
         dir: crate::utilities::Vector3,
-        refraction: bool,
-        scene: crate::utilities::SceneData,
+        _refraction: bool,
+        _scene: crate::utilities::SceneData,
     ) -> Option<crate::ray_resolver::RayResult> {
         Some(RayResult::new(
             pos,

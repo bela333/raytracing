@@ -1,6 +1,5 @@
 use std::{
     cmp::Ordering,
-    f32::EPSILON,
     fs::File,
     io::{BufRead, BufReader},
     path::Path,

@@ -1,14 +1,7 @@
 use crate::{
-    bvh::{
-        aabb::{AABBRayResolver, AABB},
-        dummy::Dummy,
-        generate_bvh_from_file,
-        multi_ray_resolver::MultiRayResolver,
-        triangle::{Triangle, TriangleResolver},
-        triangles_from_file,
-    },
-    ray_marcher::{self, SDFResult},
-    ray_resolver::{MaterialType, RayResolver},
+    bvh::{aabb::AABBRayResolver, generate_bvh_from_file},
+    ray_marcher::SDFResult,
+    ray_resolver::MaterialType,
     utilities::Vector3,
 };
 
@@ -28,16 +21,6 @@ fn raymarcher_scene(p: Vector3, refraction: bool) -> SDFResult {
     let sphere3 = SDFResult::new(
         SDFResult::sphere_dist(p, Vector3::new(3f32, 0.0f32, 4f32), 1.5),
         Vector3::from_int(0xebbdb9).srgb(),
-        Vector3::zero(),
-        MaterialType::Glass(if refraction {
-            1.52 / 1.000293
-        } else {
-            1.000293 / 1.52
-        }),
-    );
-    let sphere4 = SDFResult::new(
-        SDFResult::sphere_dist(p, Vector3::new(3f32, 0.0f32, 4f32), 1.5),
-        Vector3::from_single(1.0),
         Vector3::zero(),
         MaterialType::Glass(if refraction {
             1.52 / 1.000293

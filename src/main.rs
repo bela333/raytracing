@@ -7,7 +7,6 @@ extern crate rayon;
 
 pub mod basic_renderer;
 pub mod bvh;
-mod config_parser;
 pub mod error;
 pub mod path_tracer;
 pub mod ray_marcher;
@@ -17,7 +16,7 @@ mod scene;
 pub mod utilities;
 
 use crate::renderer::Renderer;
-use exr::{image::read::specific_channels, prelude::*};
+use exr::prelude::*;
 use image::ImageBuffer;
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
 use rand_distr::Uniform;
@@ -73,7 +72,7 @@ fn main() {
     };
     match RENDERER {
         Renderers::BasicRenderer => {
-            let renderer = basic_renderer::BasicRenderer { resolver: resolver };
+            let renderer = basic_renderer::BasicRenderer { resolver };
             save_render(&renderer, &scene, FILE_NAME);
         }
         Renderers::PathTracer => {
@@ -98,7 +97,7 @@ fn main() {
             let pixels: Vec<Vec<[f32; 4]>> = skybox.layer_data.channel_data.pixels;
             let s = (pixels.first().unwrap().len(), pixels.len());
             let renderer = path_tracer::PathTracer {
-                resolver: resolver,
+                resolver,
                 bounces: 5,
                 samples: 500,
                 epsilon: 0.0002f32,

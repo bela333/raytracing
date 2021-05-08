@@ -108,7 +108,7 @@ impl<T: RayResolver> Renderer<T> for PathTracer<T> {
         start: Vector3,
         dir: Vector3,
         scene: SceneData,
-        width: u32,
+        _width: u32,
         height: u32,
     ) -> Vector3 {
         let mut o = Vector3::zero();
