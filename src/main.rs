@@ -27,8 +27,8 @@ use scene::get_resolver;
 use std::{f32::consts::{FRAC_PI_2, PI}, usize};
 use utilities::{SceneData, Vector3};
 
-const WIDTH: u32 = 1920/2;
-const HEIGHT: u32 = 1080/2;
+const WIDTH: u32 = 1920;
+const HEIGHT: u32 = 1080;
 
 const WIDTH_F: f32 = WIDTH as f32 / 2f32;
 const HEIGHT_F: f32 = HEIGHT as f32 / 2f32;
