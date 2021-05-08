@@ -8,7 +8,9 @@ pub struct Triangle{
     pub v0: Vector3,
     pub v1: Vector3,
     pub v2: Vector3,
-    pub normal: Vector3,
+    pub n0: Vector3,
+    pub n1: Vector3,
+    pub n2: Vector3,
     pub centroid: Vector3,
     pub color: Vector3,
     pub emit: Vector3,
@@ -19,11 +21,15 @@ impl Triangle {
     pub fn new(v0: Vector3, v1: Vector3, v2: Vector3, color: Vector3, emit: Vector3, t: MaterialType) -> Self{
         let v0v1 = v1.subtract(v0);
         let v0v2 = v2.subtract(v0);
-        let normal = v0v2.cross(v0v1).normalized();
+        let normal = v0v1.cross(v0v2).normalized();
+        Self::new_with_normal(v0, v1, v2, normal, normal, normal, color, emit, t)
+    }
+    pub fn new_with_normal(v0: Vector3, v1: Vector3, v2: Vector3,n0: Vector3, n1: Vector3, n2: Vector3, color: Vector3, emit: Vector3, t: MaterialType) -> Self{
+
         let centroid = v0.add(v1).add(v2).multiply(1.0/3.0);
         Self{
             v0, v1, v2,
-            normal,
+            n0, n1, n2,
             centroid,
             color,
             emit,
@@ -35,7 +41,7 @@ impl Triangle {
         let v0v2 = self.v2.subtract(self.v0);
         let pvec = dir.cross(v0v2);
         let det = v0v1.dot(pvec);
-        if det.abs() < EPSILON {
+        if det < EPSILON*4.0 {
             return None;
         }
         let inv_det = 1.0 / det;
@@ -83,8 +89,11 @@ impl RayResolver for TriangleResolver {
     ) -> Option<RayResult> {
         match self.triangle.trace(&pos, &dir) {
             Some((hit, u, v)) => {
-                //Some(RayResult::new(hit, Vector3::new(u, v, 1.0-u-v), self.triangle.normal, self.triangle.emit, self.triangle.t.clone()))
-                Some(RayResult::new(hit, self.triangle.color, self.triangle.normal, self.triangle.emit, self.triangle.t.clone()))
+                let n0 = self.triangle.n0.multiply(u);
+                let n1 = self.triangle.n0.multiply(v);
+                let n2 = self.triangle.n0.multiply(1.0-u-v);
+                let normal = n0.add(n1).add(n2).normalized();
+                Some(RayResult::new(hit, self.triangle.color, normal, self.triangle.emit, self.triangle.t.clone()))
             },
             None => None
         }

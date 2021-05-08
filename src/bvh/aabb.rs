@@ -113,7 +113,7 @@ impl RayResolver for AABBRayResolver{
         scene: crate::utilities::SceneData,
     ) -> Option<crate::ray_resolver::RayResult> {
         match self.aabb.trace(&pos, &dir) {
-            Some(pos) => self.inner.resolve(pos.subtract(dir.multiply(EPSILON*2.0)), dir, refraction, scene),
+            Some(_) => self.inner.resolve(pos, dir, refraction, scene),
             None => None
         }
     }

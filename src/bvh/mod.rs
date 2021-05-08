@@ -57,7 +57,7 @@ fn _generate_bvh(mut triangles: Vec<Triangle>, orientation: Components) -> Resul
         //Return single triangle
         let triangle = triangles[0].clone();
         let mut aabb = triangle.bounds();
-        let margin: Vector3 = Vector3::from_single(EPSILON*2.0); //Add a small margin around the triangle
+        let margin: Vector3 = Vector3::from_single(0.0001); //Add a small margin around the triangle
         aabb.min = aabb.min.subtract(margin);
         aabb.max = aabb.max.add(margin);
         let inner = TriangleResolver{
