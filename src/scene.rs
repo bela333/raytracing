@@ -1,6 +1,6 @@
 
 
-use crate::{bvh::{aabb::{AABB, AABBRayResolver}, dummy::Dummy, multi_ray_resolver::MultiRayResolver, triangle::{Triangle, TriangleResolver}}, ray_marcher::{self, SDFResult}, ray_resolver::{MaterialType}, utilities::Vector3};
+use crate::{bvh::{aabb::{AABB, AABBRayResolver}, dummy::Dummy, generate_bvh_from_file, multi_ray_resolver::MultiRayResolver, triangle::{Triangle, TriangleResolver}, triangles_from_file}, ray_marcher::{self, SDFResult}, ray_resolver::{MaterialType, RayResolver}, utilities::Vector3};
 
 fn raymarcher_scene(p: Vector3, refraction: bool) -> SDFResult {
 
@@ -29,17 +29,19 @@ fn raymarcher_scene(p: Vector3, refraction: bool) -> SDFResult {
 }
 
 pub fn get_resolver() -> AABBRayResolver{
-    let triangle = Triangle::new(
-        Vector3::new(0.0, 1.0, 4.0),
-        Vector3::new(1.0, 0.0, 4.0),
-        Vector3::new(-1.0, 0.0, 4.0),
-        Vector3::from_int(0x4287f5).srgb(),
-        Vector3::zero(),
-        MaterialType::Diffuse
-    );
-    let aabb = triangle.bounds();
-    let triangle = TriangleResolver{
-        triangle: triangle,
-    };
-    AABBRayResolver::new(aabb, triangle)
+    println!("Building BVH");
+    let r = generate_bvh_from_file("teapot.obj").unwrap();
+    println!("BVH done!");
+    r
+    /*println!("Building B2 triangle array");
+    let triangles = triangles_from_file("teapot.obj").unwrap();
+    let triangles = triangles.iter().map(|a|TriangleResolver{triangle: a.clone()});
+    let mut boxed: Vec<Box<(dyn RayResolver + Sync + 'static)>> = Vec::new();
+    for t in triangles{
+        boxed.push(Box::new(t));
+    }
+    println!("Done building B2 triangle array");
+    MultiRayResolver{
+        inner: boxed
+    }*/
 }

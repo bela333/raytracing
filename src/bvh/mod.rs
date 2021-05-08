@@ -1,13 +1,49 @@
-use std::cmp::Ordering;
+use std::{cmp::Ordering, f32::EPSILON, fs::File, io::{BufRead, BufReader}, path::Path, usize};
 
-use crate::{error::Error, ray_resolver::RayResolver, utilities::Components};
+use obj::{Obj, load_obj};
 
-use self::{aabb::{AABB, AABBRayResolver}, multi_ray_resolver::MultiRayResolver, triangle::{Triangle, TriangleResolver}};
+use crate::{error::Error, ray_resolver::MaterialType, utilities::{Components, Vector3}};
+
+use self::{aabb::AABBRayResolver, multi_ray_resolver::MultiRayResolver, triangle::{Triangle, TriangleResolver}};
 
 pub mod aabb;
 pub mod dummy;
 pub mod multi_ray_resolver;
 pub mod triangle;
+
+pub fn generate_bvh_from_file<P: AsRef<Path>>(filename: P) -> Result<AABBRayResolver, Error>{
+    let file = BufReader::new(File::open(filename)?);
+    generate_bvh_from_bufread(file)
+}
+pub fn generate_bvh_from_bufread<T: BufRead>(buffer: T) -> Result<AABBRayResolver, Error>{
+    let triangles = triangles_from_bufread(buffer)?;
+    generate_bvh(triangles)
+}
+
+pub fn triangles_from_file<P: AsRef<Path>>(filename: P) -> Result<Vec<Triangle>, Error>{
+    let file = BufReader::new(File::open(filename)?);
+    triangles_from_bufread(file)
+}
+
+pub fn triangles_from_bufread<T: BufRead>(buffer: T) -> Result<Vec<Triangle>, Error>{
+    let obj: Obj = load_obj(buffer)?;
+    let triangles: Vec<Triangle> = obj.indices
+        .chunks(3)
+        .map(|i| {
+            match i{
+                [i0, i1, i2] => (obj.vertices[*i0 as usize], obj.vertices[*i1 as usize], obj.vertices[*i2 as usize]),
+                _ => panic!("Couldn't load mesh")
+            }
+            
+        })
+        .map(|(v0, v1, v2)| {
+            let v0 = Vector3::new(v0.position[0], v0.position[1], v0.position[2]);
+            let v1 = Vector3::new(v1.position[0], v1.position[1], v1.position[2]);
+            let v2 = Vector3::new(v2.position[0], v2.position[1], v2.position[2]);
+            Triangle::new(v0, v1, v2, Vector3::from_single(1.0), Vector3::zero(), MaterialType::Diffuse)
+        }).collect();
+    Ok(triangles)
+}
 
 pub fn generate_bvh(triangles: Vec<Triangle>) -> Result<AABBRayResolver, Error>{
     _generate_bvh(triangles, Components::X)
@@ -20,7 +56,10 @@ fn _generate_bvh(mut triangles: Vec<Triangle>, orientation: Components) -> Resul
     if triangles.len() == 1{
         //Return single triangle
         let triangle = triangles[0].clone();
-        let aabb = triangle.bounds();
+        let mut aabb = triangle.bounds();
+        let margin: Vector3 = Vector3::from_single(EPSILON*2.0); //Add a small margin around the triangle
+        aabb.min = aabb.min.subtract(margin);
+        aabb.max = aabb.max.add(margin);
         let inner = TriangleResolver{
             triangle
         };

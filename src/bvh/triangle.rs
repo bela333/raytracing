@@ -1,9 +1,8 @@
-use std::cmp::Ordering;
+use std::{cmp::Ordering, f32::EPSILON};
 
 use crate::{ray_resolver::{MaterialType, RayResolver, RayResult}, utilities::Vector3};
 
 use super::aabb::AABB;
-const EPSILON: f32 = 0.00001;
 #[derive(Clone)]
 pub struct Triangle{
     pub v0: Vector3,
@@ -20,7 +19,7 @@ impl Triangle {
     pub fn new(v0: Vector3, v1: Vector3, v2: Vector3, color: Vector3, emit: Vector3, t: MaterialType) -> Self{
         let v0v1 = v1.subtract(v0);
         let v0v2 = v2.subtract(v0);
-        let normal = v0v1.cross(v0v2).normalized();
+        let normal = v0v2.cross(v0v1).normalized();
         let centroid = v0.add(v1).add(v2).multiply(1.0/3.0);
         Self{
             v0, v1, v2,
@@ -36,7 +35,7 @@ impl Triangle {
         let v0v2 = self.v2.subtract(self.v0);
         let pvec = dir.cross(v0v2);
         let det = v0v1.dot(pvec);
-        if det < EPSILON {
+        if det.abs() < EPSILON {
             return None;
         }
         let inv_det = 1.0 / det;
@@ -84,6 +83,7 @@ impl RayResolver for TriangleResolver {
     ) -> Option<RayResult> {
         match self.triangle.trace(&pos, &dir) {
             Some((hit, u, v)) => {
+                //Some(RayResult::new(hit, Vector3::new(u, v, 1.0-u-v), self.triangle.normal, self.triangle.emit, self.triangle.t.clone()))
                 Some(RayResult::new(hit, self.triangle.color, self.triangle.normal, self.triangle.emit, self.triangle.t.clone()))
             },
             None => None

@@ -27,8 +27,8 @@ use scene::get_resolver;
 use std::{f32::consts::{FRAC_PI_2, PI}, usize};
 use utilities::{SceneData, Vector3};
 
-const WIDTH: u32 = 1920;
-const HEIGHT: u32 = 1080;
+const WIDTH: u32 = 1920/2;
+const HEIGHT: u32 = 1080/2;
 
 const WIDTH_F: f32 = WIDTH as f32 / 2f32;
 const HEIGHT_F: f32 = HEIGHT as f32 / 2f32;
@@ -63,12 +63,8 @@ const CAMERA_TYPE: CameraTypes = CameraTypes::Normal;
 fn main() {
     let resolver = get_resolver();
     let scene = utilities::SceneData {
-        camera_position: Vector3::new(0f32, 0.2f32, 2f32)
-            .subtract(Vector3::new(0f32, 0.1f32, 4f32))
-            .multiply(2f32)
-            .add(Vector3::new(0f32, 0.1f32, 4f32))
-            .add(Vector3::new(0f32, 0f32, -2f32)),
-        camera_target: Vector3::new(0f32, 0.1f32, 4f32),
+        camera_position: Vector3::new(0.0, 4.0, -5.0),
+        camera_target: Vector3::new(0f32, 2.0f32, 0f32),
         fog_amount: 50.0,
         fog: false,
     };
