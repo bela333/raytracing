@@ -6,21 +6,27 @@ extern crate rand_distr;
 extern crate rayon;
 
 pub mod basic_renderer;
-mod config_parser;
+pub mod bvh;
+pub mod error;
 pub mod path_tracer;
 pub mod ray_marcher;
 pub mod ray_resolver;
 pub mod renderer;
+mod scene;
 pub mod utilities;
 
 use crate::renderer::Renderer;
-use exr::{image::{read::specific_channels}, prelude::*};
+use exr::prelude::*;
 use image::ImageBuffer;
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
 use rand_distr::Uniform;
 use ray_resolver::RayResolver;
 use rayon::prelude::*;
-use std::{f32::consts::{FRAC_PI_2, PI}, usize};
+use scene::get_resolver;
+use std::{
+    f32::consts::{FRAC_PI_2, PI},
+    usize,
+};
 use utilities::{SceneData, Vector3};
 
 const WIDTH: u32 = 1920;
@@ -57,39 +63,41 @@ enum CameraTypes {
 const CAMERA_TYPE: CameraTypes = CameraTypes::Normal;
 
 fn main() {
-    let resolver = ray_marcher::RayMarcher {
-        max_distance: 150f32,
-        max_steps: 1000,
-        epsilon: 0.0002f32,
-    };
+    let resolver = get_resolver();
     let scene = utilities::SceneData {
-        camera_position: Vector3::new(0f32, 0.2f32, 2f32)
-            .subtract(Vector3::new(0f32, 0.1f32, 4f32))
-            .multiply(2f32)
-            .add(Vector3::new(0f32, 0.1f32, 4f32))
-            .add(Vector3::new(0f32, 0f32, -2f32)),
-        camera_target: Vector3::new(0f32, 0.1f32, 4f32),
+        camera_position: Vector3::new(0.0, 4.0, -5.0),
+        camera_target: Vector3::new(0f32, 2.0f32, 0f32),
         fog_amount: 50.0,
         fog: false,
     };
     match RENDERER {
         Renderers::BasicRenderer => {
-            let renderer = basic_renderer::BasicRenderer { resolver: resolver };
+            let renderer = basic_renderer::BasicRenderer { resolver };
             save_render(&renderer, &scene, FILE_NAME);
         }
         Renderers::PathTracer => {
-            let skybox = read().no_deep_data().largest_resolution_level().rgba_channels(|resolution, _|{
-                let p = [0.0; 4];
-                let line = vec![p; resolution.width()];
-                let img = vec![line; resolution.height()];
-                img
-            }, |img, pos, (r, g, b, a): (f32, f32, f32, f32)|{
-                img[pos.y()][pos.x()] = [r, g, b, a];
-            }).first_valid_layer().all_attributes().from_file("env.exr").unwrap();
+            let skybox = read()
+                .no_deep_data()
+                .largest_resolution_level()
+                .rgba_channels(
+                    |resolution, _| {
+                        let p = [0.0; 4];
+                        let line = vec![p; resolution.width()];
+                        let img = vec![line; resolution.height()];
+                        img
+                    },
+                    |img, pos, (r, g, b, a): (f32, f32, f32, f32)| {
+                        img[pos.y()][pos.x()] = [r, g, b, a];
+                    },
+                )
+                .first_valid_layer()
+                .all_attributes()
+                .from_file("env.exr")
+                .unwrap();
             let pixels: Vec<Vec<[f32; 4]>> = skybox.layer_data.channel_data.pixels;
             let s = (pixels.first().unwrap().len(), pixels.len());
             let renderer = path_tracer::PathTracer {
-                resolver: resolver,
+                resolver,
                 bounces: 5,
                 samples: 500,
                 epsilon: 0.0002f32,
@@ -156,11 +164,16 @@ where
                 })
                 .collect();
             println!("\n\nWriting to {}", file_name);
-            let layer = Layer::new((WIDTH as usize, HEIGHT as usize), LayerAttributes::default(), Encoding::SMALL_FAST_LOSSY, SpecificChannels::rgb(|pos: Vec2<usize>|{
-                let i = pos.0 + pos.1 * WIDTH as usize;
-                let c = pixels[i];
-                (c.x, c.y, c.z)
-            }));
+            let layer = Layer::new(
+                (WIDTH as usize, HEIGHT as usize),
+                LayerAttributes::default(),
+                Encoding::SMALL_FAST_LOSSY,
+                SpecificChannels::rgb(|pos: Vec2<usize>| {
+                    let i = pos.0 + pos.1 * WIDTH as usize;
+                    let c = pixels[i];
+                    (c.x, c.y, c.z)
+                }),
+            );
             let image = Image::from_layer(layer);
             image.write().to_file(file_name).unwrap();
         }

@@ -60,10 +60,16 @@ impl<T: RayResolver> PathTracer<T> {
                     } else {
                         //Render skybox
                         let color = {
-                            let x = ((dir.x.atan2(dir.z)/PI + 1.0) * 0.5 * (self.skybox_size.0-1) as f32) as usize;
-                            let y = (((-dir.y).asin()/(PI/2.0)+1.0)*0.5 * (self.skybox_size.1-1) as f32) as usize;
-                            let x = x.clamp(0, self.skybox_size.0-1);
-                            let y = y.clamp(0, self.skybox_size.1-1);
+                            let x = ((dir.x.atan2(dir.z) / PI + 1.0)
+                                * 0.5
+                                * (self.skybox_size.0 - 1) as f32)
+                                as usize;
+                            let y = (((-dir.y).asin() / (PI / 2.0) + 1.0)
+                                * 0.5
+                                * (self.skybox_size.1 - 1) as f32)
+                                as usize;
+                            let x = x.clamp(0, self.skybox_size.0 - 1);
+                            let y = y.clamp(0, self.skybox_size.1 - 1);
                             let v = self.skybox[y][x];
                             Vector3::new(v[0], v[1], v[2])
                         };
@@ -102,7 +108,7 @@ impl<T: RayResolver> Renderer<T> for PathTracer<T> {
         start: Vector3,
         dir: Vector3,
         scene: SceneData,
-        width: u32,
+        _width: u32,
         height: u32,
     ) -> Vector3 {
         let mut o = Vector3::zero();

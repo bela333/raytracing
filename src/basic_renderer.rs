@@ -12,7 +12,7 @@ impl<T: RayResolver> Renderer<T> for BasicRenderer<T> {
         match result {
             None => Vector3::zero(),
             Some(v) => {
-                let lamp = Vector3::new(1f32, 1f32, 1f32);
+                let lamp = Vector3::new(0.0, 0.0, -5.0);
                 let ambient = v.color.multiply(0.25);
                 let diffuse = v.color.multiply(
                     Vector3::new(1f32, 1f32, 1f32)
