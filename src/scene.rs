@@ -33,15 +33,4 @@ pub fn get_resolver() -> AABBRayResolver{
     let r = generate_bvh_from_file("teapot.obj").unwrap();
     println!("BVH done!");
     r
-    /*println!("Building B2 triangle array");
-    let triangles = triangles_from_file("teapot.obj").unwrap();
-    let triangles = triangles.iter().map(|a|TriangleResolver{triangle: a.clone()});
-    let mut boxed: Vec<Box<(dyn RayResolver + Sync + 'static)>> = Vec::new();
-    for t in triangles{
-        boxed.push(Box::new(t));
-    }
-    println!("Done building B2 triangle array");
-    MultiRayResolver{
-        inner: boxed
-    }*/
 }

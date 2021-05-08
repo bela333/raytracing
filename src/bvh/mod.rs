@@ -37,10 +37,13 @@ pub fn triangles_from_bufread<T: BufRead>(buffer: T) -> Result<Vec<Triangle>, Er
             
         })
         .map(|(v0, v1, v2)| {
-            let v0 = Vector3::new(v0.position[0], v0.position[1], v0.position[2]);
-            let v1 = Vector3::new(v1.position[0], v1.position[1], v1.position[2]);
-            let v2 = Vector3::new(v2.position[0], v2.position[1], v2.position[2]);
-            Triangle::new(v0, v1, v2, Vector3::from_single(1.0), Vector3::zero(), MaterialType::Diffuse)
+            let n0 = Vector3::new(-v0.normal[0], v0.normal[1], v0.normal[2]);
+            let n1 = Vector3::new(-v1.normal[0], v1.normal[1], v1.normal[2]);
+            let n2 = Vector3::new(-v2.normal[0], v2.normal[1], v2.normal[2]);
+            let v0 = Vector3::new(-v0.position[0], v0.position[1], v0.position[2]);
+            let v1 = Vector3::new(-v1.position[0], v1.position[1], v1.position[2]);
+            let v2 = Vector3::new(-v2.position[0], v2.position[1], v2.position[2]);
+            Triangle::new_with_normal(v2, v1, v0,n0, n1, n2, Vector3::from_single(1.0), Vector3::zero(), MaterialType::Diffuse)
         }).collect();
     Ok(triangles)
 }
