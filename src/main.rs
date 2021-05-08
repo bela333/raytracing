@@ -13,6 +13,7 @@ pub mod ray_resolver;
 pub mod renderer;
 pub mod utilities;
 pub mod bvh;
+pub mod error;
 mod scene;
 
 use crate::renderer::Renderer;

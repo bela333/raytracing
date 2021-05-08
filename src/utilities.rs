@@ -7,10 +7,21 @@ pub struct Vector3 {
     pub z: f32,
 }
 
+#[derive(Clone, Copy)]
 pub enum Components {
     X,
     Y,
     Z,
+}
+
+impl Components {
+    pub fn next(&self) -> Self{
+        match self {
+            Components::X => Components::Y,
+            Components::Y => Components::Z,
+            Components::Z => Components::X
+        }
+    }
 }
 
 impl Vector3 {
@@ -32,6 +43,14 @@ impl Vector3 {
         Vector3::new(0.1804375, 0.0721750, 0.9503041)
         ).multiply(*self)*/
         Self::new(self.x.powf(2.2), self.y.powf(2.2), self.z.powf(2.2))
+    }
+
+    pub fn get_component(&self, component: Components) -> f32{
+        match component {
+            Components::X => self.x,
+            Components::Y => self.y,
+            Components::Z => self.z
+        }
     }
 
     pub fn largest_component(&self) -> Components {

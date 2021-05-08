@@ -28,16 +28,18 @@ fn raymarcher_scene(p: Vector3, refraction: bool) -> SDFResult {
     sphere1.union(sphere2).union(sphere3)
 }
 
-pub fn get_resolver() -> TriangleResolver{
+pub fn get_resolver() -> AABBRayResolver{
     let triangle = Triangle::new(
         Vector3::new(0.0, 1.0, 4.0),
         Vector3::new(1.0, 0.0, 4.0),
         Vector3::new(-1.0, 0.0, 4.0),
+        Vector3::from_int(0x4287f5).srgb(),
+        Vector3::zero(),
+        MaterialType::Diffuse
     );
-    TriangleResolver{
+    let aabb = triangle.bounds();
+    let triangle = TriangleResolver{
         triangle: triangle,
-        color: Vector3::from_int(0x4287f5).srgb(),
-        emit: Vector3::zero(),
-        t: MaterialType::Diffuse
-    }
+    };
+    AABBRayResolver::new(aabb, triangle)
 }

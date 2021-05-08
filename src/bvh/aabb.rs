@@ -87,13 +87,13 @@ impl AABB{
     }
 }
 
-pub struct AABBRayResolver<T>{
+pub struct AABBRayResolver{
     pub aabb: AABB,
-    pub inner: Box<T>
+    pub inner: Box<dyn RayResolver + Sync>
 }
 
-impl<T: RayResolver> AABBRayResolver<T>{
-    pub fn new(aabb: AABB, inner: T) -> Self{
+impl AABBRayResolver{
+    pub fn new<T: RayResolver + Sync + 'static>(aabb: AABB, inner: T) -> Self{
         let inner = Box::new(inner);
         Self{
             aabb: aabb,
@@ -102,7 +102,7 @@ impl<T: RayResolver> AABBRayResolver<T>{
     }
 }
 
-impl<T: RayResolver> RayResolver for AABBRayResolver<T>{
+impl RayResolver for AABBRayResolver{
     fn resolve(
         &self,
         pos: Vector3,
