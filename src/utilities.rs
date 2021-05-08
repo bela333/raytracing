@@ -15,11 +15,11 @@ pub enum Components {
 }
 
 impl Components {
-    pub fn next(&self) -> Self{
+    pub fn next(&self) -> Self {
         match self {
             Components::X => Components::Y,
             Components::Y => Components::Z,
-            Components::Z => Components::X
+            Components::Z => Components::X,
         }
     }
 }
@@ -45,11 +45,11 @@ impl Vector3 {
         Self::new(self.x.powf(2.2), self.y.powf(2.2), self.z.powf(2.2))
     }
 
-    pub fn get_component(&self, component: Components) -> f32{
+    pub fn get_component(&self, component: Components) -> f32 {
         match component {
             Components::X => self.x,
             Components::Y => self.y,
-            Components::Z => self.z
+            Components::Z => self.z,
         }
     }
 
@@ -218,11 +218,11 @@ impl Vector3 {
         }
     }
 
-    pub fn reciprocal(&self) -> Self{
-        Self{
-            x: 1.0/self.x,
-            y: 1.0/self.y,
-            z: 1.0/self.z,
+    pub fn reciprocal(&self) -> Self {
+        Self {
+            x: 1.0 / self.x,
+            y: 1.0 / self.y,
+            z: 1.0 / self.z,
         }
     }
 }

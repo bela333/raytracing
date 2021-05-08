@@ -1,17 +1,13 @@
 use std::fmt::Display;
 
-
-
 #[derive(Debug)]
-pub struct Error{
-    msg: String
+pub struct Error {
+    msg: String,
 }
 
 impl Error {
     pub fn new(msg: String) -> Self {
-        Self {
-            msg
-        }
+        Self { msg }
     }
 }
 
@@ -21,16 +17,14 @@ impl Display for Error {
     }
 }
 
-impl std::error::Error for Error{
-
-}
+impl std::error::Error for Error {}
 
 macro_rules! implement_error {
     ($t:ty, $message:expr) => {
         impl From<$t> for Error {
             fn from(e: $t) -> Self {
                 Self {
-                    msg: format!(concat!($message, ": {}"), e)
+                    msg: format!(concat!($message, ": {}"), e),
                 }
             }
         }

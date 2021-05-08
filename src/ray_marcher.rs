@@ -5,7 +5,7 @@ pub struct RayMarcher {
     pub max_steps: u32,
     pub max_distance: f32,
     pub epsilon: f32,
-    pub scene: fn(Vector3, bool) -> SDFResult
+    pub scene: fn(Vector3, bool) -> SDFResult,
 }
 
 #[derive(Clone)]
@@ -49,8 +49,6 @@ impl SDFResult {
 }
 
 impl RayMarcher {
-
-
     fn get_sdf(&self, p: Vector3, refraction: bool) -> SDFResult {
         let scene = self.scene;
         let mut v = scene(p, refraction);

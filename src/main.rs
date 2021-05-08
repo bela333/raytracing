@@ -6,25 +6,28 @@ extern crate rand_distr;
 extern crate rayon;
 
 pub mod basic_renderer;
+pub mod bvh;
 mod config_parser;
+pub mod error;
 pub mod path_tracer;
 pub mod ray_marcher;
 pub mod ray_resolver;
 pub mod renderer;
-pub mod utilities;
-pub mod bvh;
-pub mod error;
 mod scene;
+pub mod utilities;
 
 use crate::renderer::Renderer;
-use exr::{image::{read::specific_channels}, prelude::*};
+use exr::{image::read::specific_channels, prelude::*};
 use image::ImageBuffer;
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
 use rand_distr::Uniform;
 use ray_resolver::RayResolver;
 use rayon::prelude::*;
 use scene::get_resolver;
-use std::{f32::consts::{FRAC_PI_2, PI}, usize};
+use std::{
+    f32::consts::{FRAC_PI_2, PI},
+    usize,
+};
 use utilities::{SceneData, Vector3};
 
 const WIDTH: u32 = 1920;
@@ -74,14 +77,24 @@ fn main() {
             save_render(&renderer, &scene, FILE_NAME);
         }
         Renderers::PathTracer => {
-            let skybox = read().no_deep_data().largest_resolution_level().rgba_channels(|resolution, _|{
-                let p = [0.0; 4];
-                let line = vec![p; resolution.width()];
-                let img = vec![line; resolution.height()];
-                img
-            }, |img, pos, (r, g, b, a): (f32, f32, f32, f32)|{
-                img[pos.y()][pos.x()] = [r, g, b, a];
-            }).first_valid_layer().all_attributes().from_file("env.exr").unwrap();
+            let skybox = read()
+                .no_deep_data()
+                .largest_resolution_level()
+                .rgba_channels(
+                    |resolution, _| {
+                        let p = [0.0; 4];
+                        let line = vec![p; resolution.width()];
+                        let img = vec![line; resolution.height()];
+                        img
+                    },
+                    |img, pos, (r, g, b, a): (f32, f32, f32, f32)| {
+                        img[pos.y()][pos.x()] = [r, g, b, a];
+                    },
+                )
+                .first_valid_layer()
+                .all_attributes()
+                .from_file("env.exr")
+                .unwrap();
             let pixels: Vec<Vec<[f32; 4]>> = skybox.layer_data.channel_data.pixels;
             let s = (pixels.first().unwrap().len(), pixels.len());
             let renderer = path_tracer::PathTracer {
@@ -152,11 +165,16 @@ where
                 })
                 .collect();
             println!("\n\nWriting to {}", file_name);
-            let layer = Layer::new((WIDTH as usize, HEIGHT as usize), LayerAttributes::default(), Encoding::SMALL_FAST_LOSSY, SpecificChannels::rgb(|pos: Vec2<usize>|{
-                let i = pos.0 + pos.1 * WIDTH as usize;
-                let c = pixels[i];
-                (c.x, c.y, c.z)
-            }));
+            let layer = Layer::new(
+                (WIDTH as usize, HEIGHT as usize),
+                LayerAttributes::default(),
+                Encoding::SMALL_FAST_LOSSY,
+                SpecificChannels::rgb(|pos: Vec2<usize>| {
+                    let i = pos.0 + pos.1 * WIDTH as usize;
+                    let c = pixels[i];
+                    (c.x, c.y, c.z)
+                }),
+            );
             let image = Image::from_layer(layer);
             image.write().to_file(file_name).unwrap();
         }

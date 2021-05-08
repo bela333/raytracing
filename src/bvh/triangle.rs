@@ -1,10 +1,13 @@
 use std::{cmp::Ordering, f32::EPSILON};
 
-use crate::{ray_resolver::{MaterialType, RayResolver, RayResult}, utilities::Vector3};
+use crate::{
+    ray_resolver::{MaterialType, RayResolver, RayResult},
+    utilities::Vector3,
+};
 
 use super::aabb::AABB;
 #[derive(Clone)]
-pub struct Triangle{
+pub struct Triangle {
     pub v0: Vector3,
     pub v1: Vector3,
     pub v2: Vector3,
@@ -14,34 +17,54 @@ pub struct Triangle{
     pub centroid: Vector3,
     pub color: Vector3,
     pub emit: Vector3,
-    pub t: MaterialType
+    pub t: MaterialType,
 }
 
 impl Triangle {
-    pub fn new(v0: Vector3, v1: Vector3, v2: Vector3, color: Vector3, emit: Vector3, t: MaterialType) -> Self{
+    pub fn new(
+        v0: Vector3,
+        v1: Vector3,
+        v2: Vector3,
+        color: Vector3,
+        emit: Vector3,
+        t: MaterialType,
+    ) -> Self {
         let v0v1 = v1.subtract(v0);
         let v0v2 = v2.subtract(v0);
         let normal = v0v1.cross(v0v2).normalized();
         Self::new_with_normal(v0, v1, v2, normal, normal, normal, color, emit, t)
     }
-    pub fn new_with_normal(v0: Vector3, v1: Vector3, v2: Vector3,n0: Vector3, n1: Vector3, n2: Vector3, color: Vector3, emit: Vector3, t: MaterialType) -> Self{
-
-        let centroid = v0.add(v1).add(v2).multiply(1.0/3.0);
-        Self{
-            v0, v1, v2,
-            n0, n1, n2,
+    pub fn new_with_normal(
+        v0: Vector3,
+        v1: Vector3,
+        v2: Vector3,
+        n0: Vector3,
+        n1: Vector3,
+        n2: Vector3,
+        color: Vector3,
+        emit: Vector3,
+        t: MaterialType,
+    ) -> Self {
+        let centroid = v0.add(v1).add(v2).multiply(1.0 / 3.0);
+        Self {
+            v0,
+            v1,
+            v2,
+            n0,
+            n1,
+            n2,
             centroid,
             color,
             emit,
-            t
+            t,
         }
     }
-    pub fn trace(&self, pos: &Vector3, dir: &Vector3) -> Option<(Vector3, f32, f32)>{
+    pub fn trace(&self, pos: &Vector3, dir: &Vector3) -> Option<(Vector3, f32, f32)> {
         let v0v1 = self.v1.subtract(self.v0);
         let v0v2 = self.v2.subtract(self.v0);
         let pvec = dir.cross(v0v2);
         let det = v0v1.dot(pvec);
-        if det < EPSILON*4.0 {
+        if det < EPSILON * 4.0 {
             return None;
         }
         let inv_det = 1.0 / det;
@@ -55,28 +78,46 @@ impl Triangle {
         if v < 0.0 || u + v > 1.0 {
             return None;
         }
-        let t = v0v2.dot(qvec)*inv_det;
+        let t = v0v2.dot(qvec) * inv_det;
         let hit = dir.multiply(t).add(*pos);
         return Some((hit, u, v));
     }
 
-    pub fn bounds(&self) -> AABB{
-        let xmin = *[self.v0.x, self.v1.x, self.v2.x].iter().min_by(|a, b|a.partial_cmp(b).unwrap_or(Ordering::Equal)).unwrap();
-        let ymin = *[self.v0.y, self.v1.y, self.v2.y].iter().min_by(|a, b|a.partial_cmp(b).unwrap_or(Ordering::Equal)).unwrap();
-        let zmin = *[self.v0.z, self.v1.z, self.v2.z].iter().min_by(|a, b|a.partial_cmp(b).unwrap_or(Ordering::Equal)).unwrap();
+    pub fn bounds(&self) -> AABB {
+        let xmin = *[self.v0.x, self.v1.x, self.v2.x]
+            .iter()
+            .min_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal))
+            .unwrap();
+        let ymin = *[self.v0.y, self.v1.y, self.v2.y]
+            .iter()
+            .min_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal))
+            .unwrap();
+        let zmin = *[self.v0.z, self.v1.z, self.v2.z]
+            .iter()
+            .min_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal))
+            .unwrap();
 
-        let xmax = *[self.v0.x, self.v1.x, self.v2.x].iter().max_by(|a, b|a.partial_cmp(b).unwrap_or(Ordering::Equal)).unwrap();
-        let ymax = *[self.v0.y, self.v1.y, self.v2.y].iter().max_by(|a, b|a.partial_cmp(b).unwrap_or(Ordering::Equal)).unwrap();
-        let zmax = *[self.v0.z, self.v1.z, self.v2.z].iter().max_by(|a, b|a.partial_cmp(b).unwrap_or(Ordering::Equal)).unwrap();
-        AABB{
+        let xmax = *[self.v0.x, self.v1.x, self.v2.x]
+            .iter()
+            .max_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal))
+            .unwrap();
+        let ymax = *[self.v0.y, self.v1.y, self.v2.y]
+            .iter()
+            .max_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal))
+            .unwrap();
+        let zmax = *[self.v0.z, self.v1.z, self.v2.z]
+            .iter()
+            .max_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal))
+            .unwrap();
+        AABB {
             min: Vector3::new(xmin, ymin, zmin),
-            max: Vector3::new(xmax, ymax, zmax)
+            max: Vector3::new(xmax, ymax, zmax),
         }
     }
 }
 
-pub struct TriangleResolver{
-    pub triangle: Triangle
+pub struct TriangleResolver {
+    pub triangle: Triangle,
 }
 
 impl RayResolver for TriangleResolver {
@@ -91,11 +132,17 @@ impl RayResolver for TriangleResolver {
             Some((hit, u, v)) => {
                 let n0 = self.triangle.n0.multiply(u);
                 let n1 = self.triangle.n0.multiply(v);
-                let n2 = self.triangle.n0.multiply(1.0-u-v);
+                let n2 = self.triangle.n0.multiply(1.0 - u - v);
                 let normal = n0.add(n1).add(n2).normalized();
-                Some(RayResult::new(hit, self.triangle.color, normal, self.triangle.emit, self.triangle.t.clone()))
-            },
-            None => None
+                Some(RayResult::new(
+                    hit,
+                    self.triangle.color,
+                    normal,
+                    self.triangle.emit,
+                    self.triangle.t.clone(),
+                ))
+            }
+            None => None,
         }
     }
 }

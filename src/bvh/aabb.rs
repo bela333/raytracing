@@ -3,19 +3,19 @@ use std::f32::EPSILON;
 use crate::{ray_resolver::RayResolver, utilities::Vector3};
 
 #[derive(Clone, Copy)]
-pub struct AABB{
+pub struct AABB {
     pub min: Vector3,
-    pub max: Vector3
+    pub max: Vector3,
 }
 
-impl AABB{
-    pub fn trace(&self, pos: &Vector3, dir: &Vector3) -> Option<Vector3>{
+impl AABB {
+    pub fn trace(&self, pos: &Vector3, dir: &Vector3) -> Option<Vector3> {
         let invdir = dir.reciprocal();
         let (mut tmin, mut tmax) = if invdir.x >= 0.0 {
             let tmin = (self.min.x - pos.x) * invdir.x;
             let tmax = (self.max.x - pos.x) * invdir.x;
             (tmin, tmax)
-        }else{
+        } else {
             let tmin = (self.max.x - pos.x) * invdir.x;
             let tmax = (self.min.x - pos.x) * invdir.x;
             (tmin, tmax)
@@ -24,7 +24,7 @@ impl AABB{
             let tymin = (self.min.y - pos.y) * invdir.y;
             let tymax = (self.max.y - pos.y) * invdir.y;
             (tymin, tymax)
-        }else{
+        } else {
             let tymin = (self.max.y - pos.y) * invdir.y;
             let tymax = (self.min.y - pos.y) * invdir.y;
             (tymin, tymax)
@@ -44,7 +44,7 @@ impl AABB{
             let tzmin = (self.min.z - pos.z) * invdir.z;
             let tzmax = (self.max.z - pos.z) * invdir.z;
             (tzmin, tzmax)
-        }else{
+        } else {
             let tzmin = (self.max.z - pos.z) * invdir.z;
             let tzmax = (self.min.z - pos.z) * invdir.z;
             (tzmin, tzmax)
@@ -60,51 +60,69 @@ impl AABB{
             tmax = tzmax;
         }
 
-        let t = if tmin < 0.0 {
-            tmax
-        }else{
-            tmin
-        };
+        let t = if tmin < 0.0 { tmax } else { tmin };
         if tmax < 0.0 {
             return None;
         }
         Some(dir.multiply(t).add(pos.clone()))
-        
-
     }
 
-    pub fn union(&self, other: &Self) -> Self{
-        let xmin = if self.min.x < other.min.x {self.min.x} else {other.min.x};
-        let ymin = if self.min.y < other.min.y {self.min.y} else {other.min.y};
-        let zmin = if self.min.z < other.min.z {self.min.z} else {other.min.z};
+    pub fn union(&self, other: &Self) -> Self {
+        let xmin = if self.min.x < other.min.x {
+            self.min.x
+        } else {
+            other.min.x
+        };
+        let ymin = if self.min.y < other.min.y {
+            self.min.y
+        } else {
+            other.min.y
+        };
+        let zmin = if self.min.z < other.min.z {
+            self.min.z
+        } else {
+            other.min.z
+        };
 
-        let xmax = if self.max.x > other.max.x {self.max.x} else {other.max.x};
-        let ymax = if self.max.y > other.max.y {self.max.y} else {other.max.y};
-        let zmax = if self.max.z > other.max.z {self.max.z} else {other.max.z};
+        let xmax = if self.max.x > other.max.x {
+            self.max.x
+        } else {
+            other.max.x
+        };
+        let ymax = if self.max.y > other.max.y {
+            self.max.y
+        } else {
+            other.max.y
+        };
+        let zmax = if self.max.z > other.max.z {
+            self.max.z
+        } else {
+            other.max.z
+        };
 
-        Self{
+        Self {
             min: Vector3::new(xmin, ymin, zmin),
             max: Vector3::new(xmax, ymax, zmax),
         }
     }
 }
 
-pub struct AABBRayResolver{
+pub struct AABBRayResolver {
     pub aabb: AABB,
-    pub inner: Box<dyn RayResolver + Sync>
+    pub inner: Box<dyn RayResolver + Sync>,
 }
 
-impl AABBRayResolver{
-    pub fn new<T: RayResolver + Sync + 'static>(aabb: AABB, inner: T) -> Self{
+impl AABBRayResolver {
+    pub fn new<T: RayResolver + Sync + 'static>(aabb: AABB, inner: T) -> Self {
         let inner = Box::new(inner);
-        Self{
+        Self {
             aabb: aabb,
-            inner: inner
+            inner: inner,
         }
     }
 }
 
-impl RayResolver for AABBRayResolver{
+impl RayResolver for AABBRayResolver {
     fn resolve(
         &self,
         pos: Vector3,
@@ -114,7 +132,7 @@ impl RayResolver for AABBRayResolver{
     ) -> Option<crate::ray_resolver::RayResult> {
         match self.aabb.trace(&pos, &dir) {
             Some(_) => self.inner.resolve(pos, dir, refraction, scene),
-            None => None
+            None => None,
         }
     }
 }
