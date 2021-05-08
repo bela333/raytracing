@@ -7,7 +7,7 @@ pub struct AABB{
 }
 
 impl AABB{
-    fn trace(&self, pos: &Vector3, dir: &Vector3) -> Option<Vector3>{
+    pub fn trace(&self, pos: &Vector3, dir: &Vector3) -> Option<Vector3>{
         let invdir = dir.reciprocal();
         let (mut tmin, mut tmax) = if invdir.x >= 0.0 {
             let tmin = (self.min.x - pos.x) * invdir.x;
@@ -69,6 +69,21 @@ impl AABB{
         Some(dir.multiply(t).add(pos.clone()))
         
 
+    }
+
+    pub fn union(&self, other: &Self) -> Self{
+        let xmin = if self.min.x < other.min.x {self.min.x} else {other.min.x};
+        let ymin = if self.min.y < other.min.y {self.min.y} else {other.min.y};
+        let zmin = if self.min.z < other.min.z {self.min.z} else {other.min.z};
+
+        let xmax = if self.max.x > other.max.x {self.max.x} else {other.max.x};
+        let ymax = if self.max.y > other.max.y {self.max.y} else {other.max.y};
+        let zmax = if self.max.z > other.max.z {self.max.z} else {other.max.z};
+
+        Self{
+            min: Vector3::new(xmin, ymin, zmin),
+            max: Vector3::new(xmax, ymax, zmax),
+        }
     }
 }
 

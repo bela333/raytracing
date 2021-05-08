@@ -1,4 +1,6 @@
-use crate::{bvh::{aabb::{AABB, AABBRayResolver}, dummy::Dummy, multi_ray_resolver::MultiRayResolver}, ray_marcher::{self, SDFResult}, ray_resolver::{MaterialType}, utilities::Vector3};
+
+
+use crate::{bvh::{aabb::{AABB, AABBRayResolver}, dummy::Dummy, multi_ray_resolver::MultiRayResolver, triangle::{Triangle, TriangleResolver}}, ray_marcher::{self, SDFResult}, ray_resolver::{MaterialType}, utilities::Vector3};
 
 fn raymarcher_scene(p: Vector3, refraction: bool) -> SDFResult {
 
@@ -26,45 +28,16 @@ fn raymarcher_scene(p: Vector3, refraction: bool) -> SDFResult {
     sphere1.union(sphere2).union(sphere3)
 }
 
-pub fn get_resolver() -> MultiRayResolver{
-    let resolver1 = {
-        let dummy = Dummy{};
-        let c = Vector3::new(0.0, 0.0, 4.0);
-        let r = 1.5;
-        let r = Vector3::from_single(r);
-        let aabb = AABB{
-            min: c.subtract(r),
-            max: c.add(r)
-        };
-        AABBRayResolver::new(aabb, dummy)
-    };
-    let resolver2 = {
-        let dummy = Dummy{};
-        let c = Vector3::new(-3.0, -3.0, 4.0);
-        let r = 1.5;
-        let r = Vector3::from_single(r);
-        let aabb = AABB{
-            min: c.subtract(r),
-            max: c.add(r)
-        };
-        AABBRayResolver::new(aabb, dummy)
-    };
-    let resolver3 = {
-        let dummy = Dummy{};
-        let c = Vector3::new(-3.0, -3.0, 6.0);
-        let r = 1.5;
-        let r = Vector3::from_single(r);
-        let aabb = AABB{
-            min: c.subtract(r),
-            max: c.add(r)
-        };
-        AABBRayResolver::new(aabb, dummy)
-    };
-    MultiRayResolver{
-        inner: vec![
-            Box::new(resolver1),
-            Box::new(resolver2),
-            Box::new(resolver3),
-        ]
+pub fn get_resolver() -> TriangleResolver{
+    let triangle = Triangle::new(
+        Vector3::new(0.0, 1.0, 4.0),
+        Vector3::new(1.0, 0.0, 4.0),
+        Vector3::new(-1.0, 0.0, 4.0),
+    );
+    TriangleResolver{
+        triangle: triangle,
+        color: Vector3::from_int(0x4287f5).srgb(),
+        emit: Vector3::zero(),
+        t: MaterialType::Diffuse
     }
 }
