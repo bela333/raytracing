@@ -131,8 +131,8 @@ impl RayResolver for TriangleResolver {
         match self.triangle.trace(&pos, &dir) {
             Some((hit, u, v)) => {
                 let n0 = self.triangle.n0.multiply(u);
-                let n1 = self.triangle.n0.multiply(v);
-                let n2 = self.triangle.n0.multiply(1.0 - u - v);
+                let n1 = self.triangle.n1.multiply(v);
+                let n2 = self.triangle.n2.multiply(1.0 - u - v);
                 let normal = n0.add(n1).add(n2).normalized();
                 Some(RayResult::new(
                     hit,
