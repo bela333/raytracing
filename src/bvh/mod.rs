@@ -63,8 +63,8 @@ pub fn triangles_from_bufread<T: BufRead>(buffer: T) -> Result<Vec<Triangle>, Er
                 v2,
                 v1,
                 v0,
-                n0,
                 n1,
+                n0,
                 n2,
                 Vector3::from_single(1.0),
                 Vector3::zero(),
@@ -92,7 +92,7 @@ fn _generate_bvh(
         //Return single triangle
         let triangle = triangles[0].clone();
         let mut aabb = triangle.bounds();
-        let margin: Vector3 = Vector3::from_single(0.0001); //Add a small margin around the triangle
+        let margin: Vector3 = aabb.max.subtract(aabb.min).multiply(1.0/100.0); //Add a small margin around the triangle
         aabb.min = aabb.min.subtract(margin);
         aabb.max = aabb.max.add(margin);
         let inner = TriangleResolver { triangle };

@@ -99,7 +99,7 @@ fn main() {
             let renderer = path_tracer::PathTracer {
                 resolver,
                 bounces: 5,
-                samples: 500,
+                samples: 100,
                 epsilon: 0.0002f32,
                 contrast: 1f32 / 5f32,
                 brightness: -0.5,
