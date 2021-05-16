@@ -114,6 +114,10 @@ impl Vector3 {
         )
     }
 
+    pub fn from_slice(a: &[f32]) -> Self{
+        Self::new(a[0], a[1], a[2])
+    }
+
     pub fn to_color_array(&self) -> [u8; 3] {
         let x = Vector3::restrict_value(self.x);
         let y = Vector3::restrict_value(self.y);

@@ -1,3 +1,4 @@
+use core::fmt;
 use std::{
     cmp::Ordering,
     fs::File,
@@ -6,13 +7,9 @@ use std::{
     usize,
 };
 
-use obj::{load_obj, Obj};
 
-use crate::{
-    error::Error,
-    ray_resolver::MaterialType,
-    utilities::{Components, Vector3},
-};
+
+use crate::{bvh::triangle::TriangleMaterial, error::Error, ray_resolver::MaterialType, utilities::{Components, Vector3}};
 
 use self::{
     aabb::AABBRayResolver,
@@ -25,53 +22,56 @@ pub mod dummy;
 pub mod multi_ray_resolver;
 pub mod triangle;
 
-pub fn generate_bvh_from_file<P: AsRef<Path>>(filename: P) -> Result<AABBRayResolver, Error> {
-    let file = BufReader::new(File::open(filename)?);
-    generate_bvh_from_bufread(file)
-}
-pub fn generate_bvh_from_bufread<T: BufRead>(buffer: T) -> Result<AABBRayResolver, Error> {
-    let triangles = triangles_from_bufread(buffer)?;
+pub fn generate_bvh_from_file<P: AsRef<Path> + fmt::Debug>(filename: P) -> Result<AABBRayResolver, Error> {
+    let triangles = triangles_from_file(filename)?;
     generate_bvh(triangles)
 }
 
-pub fn triangles_from_file<P: AsRef<Path>>(filename: P) -> Result<Vec<Triangle>, Error> {
-    let file = BufReader::new(File::open(filename)?);
-    triangles_from_bufread(file)
-}
+pub fn triangles_from_file<P: AsRef<Path> + fmt::Debug>(filename: P) -> Result<Vec<Triangle>, Error> {
+    let (models, materials) = tobj::load_obj(filename, 
+        &tobj::LoadOptions{
+            single_index: true,
+            triangulate: true,
+            ..Default::default()
+        }
+    )?;
+    //Use default material if no material file can be loaded
+    let materials = materials.unwrap_or(vec![tobj::Material::default()]);
+    //Use default material if no materials were loaded
+    let materials = if materials.len() <= 0 {vec![tobj::Material::default()]}else{materials};
+    let mut triangles: Vec<Triangle> = Vec::new();
+    for model in models {
+        let material_index = model.mesh.material_id.unwrap_or(0);
+        let material = materials.get(material_index).unwrap_or(&materials[0]);
+        let material = TriangleMaterial{
+            color: Vector3::from_slice(&material.diffuse),
+            emit: Vector3::zero(),
+            t: MaterialType::Diffuse,
+            
+        };
+        //Organize positions into Vector3s
+        let positions: Vec<(Vector3,Vector3)> = model.mesh.positions
+            .chunks(3)
+            .zip(model.mesh.normals.chunks(3)) //Zip in the normals as well
+            .map(|p| match p{
+                ([x, y, z], [nx, ny, nz]) =>
+                (Vector3::new(-*x, *y, *z), Vector3::new(-*nx, *ny, *nz)),
+                _ => panic!("Couldn't load OBJ positions")
+            }).collect();
 
-pub fn triangles_from_bufread<T: BufRead>(buffer: T) -> Result<Vec<Triangle>, Error> {
-    let obj: Obj = load_obj(buffer)?;
-    let triangles: Vec<Triangle> = obj
-        .indices
-        .chunks(3)
-        .map(|i| match i {
-            [i0, i1, i2] => (
-                obj.vertices[*i0 as usize],
-                obj.vertices[*i1 as usize],
-                obj.vertices[*i2 as usize],
-            ),
-            _ => panic!("Couldn't load mesh"),
-        })
-        .map(|(v0, v1, v2)| {
-            let n0 = Vector3::new(-v0.normal[0], v0.normal[1], v0.normal[2]);
-            let n1 = Vector3::new(-v1.normal[0], v1.normal[1], v1.normal[2]);
-            let n2 = Vector3::new(-v2.normal[0], v2.normal[1], v2.normal[2]);
-            let v0 = Vector3::new(-v0.position[0], v0.position[1], v0.position[2]);
-            let v1 = Vector3::new(-v1.position[0], v1.position[1], v1.position[2]);
-            let v2 = Vector3::new(-v2.position[0], v2.position[1], v2.position[2]);
-            Triangle::new_with_normal(
-                v2,
-                v1,
-                v0,
-                n1,
-                n0,
-                n2,
-                Vector3::from_single(1.0),
-                Vector3::zero(),
-                MaterialType::Diffuse,
-            )
-        })
-        .collect();
+        //Generate triangles
+        let mut t: Vec<Triangle> = model.mesh.indices
+            .chunks(3)
+            .map(|i| match i  {
+                [i0, i1, i2] => {
+                let (v0, n0) = positions[*i0 as usize];
+                let (v1, n1) = positions[*i1 as usize];
+                let (v2, n2) = positions[*i2 as usize];
+                Triangle::new_with_normal(v2, v1, v0,n1, n0, n2, material.clone())},
+                _ => panic!("Couldn't load mesh")
+            }).collect();
+        triangles.append(&mut t);
+    }
     Ok(triangles)
 }
 

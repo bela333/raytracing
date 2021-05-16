@@ -6,6 +6,13 @@ use crate::{
 };
 
 use super::aabb::AABB;
+
+#[derive(Clone)]
+pub struct TriangleMaterial{
+    pub color: Vector3,
+    pub emit: Vector3,
+    pub t: MaterialType,
+}
 #[derive(Clone)]
 pub struct Triangle {
     pub v0: Vector3,
@@ -15,9 +22,7 @@ pub struct Triangle {
     pub n1: Vector3,
     pub n2: Vector3,
     pub centroid: Vector3,
-    pub color: Vector3,
-    pub emit: Vector3,
-    pub t: MaterialType,
+    pub material: TriangleMaterial,
 }
 
 impl Triangle {
@@ -25,14 +30,12 @@ impl Triangle {
         v0: Vector3,
         v1: Vector3,
         v2: Vector3,
-        color: Vector3,
-        emit: Vector3,
-        t: MaterialType,
+        material: TriangleMaterial
     ) -> Self {
         let v0v1 = v1.subtract(v0);
         let v0v2 = v2.subtract(v0);
         let normal = v0v1.cross(v0v2).normalized();
-        Self::new_with_normal(v0, v1, v2, normal, normal, normal, color, emit, t)
+        Self::new_with_normal(v0, v1, v2, normal, normal, normal, material)
     }
     pub fn new_with_normal(
         v0: Vector3,
@@ -41,9 +44,7 @@ impl Triangle {
         n0: Vector3,
         n1: Vector3,
         n2: Vector3,
-        color: Vector3,
-        emit: Vector3,
-        t: MaterialType,
+        material: TriangleMaterial
     ) -> Self {
         let centroid = v0.add(v1).add(v2).multiply(1.0 / 3.0);
         Self {
@@ -54,9 +55,7 @@ impl Triangle {
             n1,
             n2,
             centroid,
-            color,
-            emit,
-            t,
+            material
         }
     }
     pub fn trace(&self, pos: &Vector3, dir: &Vector3) -> Option<(Vector3, f32, f32)> {
@@ -136,10 +135,10 @@ impl RayResolver for TriangleResolver {
                 let normal = n0.add(n1).add(n2).normalized();
                 Some(RayResult::new(
                     hit,
-                    self.triangle.color,
+                    self.triangle.material.color,
                     normal,
-                    self.triangle.emit,
-                    self.triangle.t.clone(),
+                    self.triangle.material.emit,
+                    self.triangle.material.t.clone(),
                 ))
             }
             None => None,

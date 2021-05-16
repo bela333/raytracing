@@ -1,5 +1,7 @@
 use std::fmt::Display;
 
+use tobj::LoadError;
+
 #[derive(Debug)]
 pub struct Error {
     msg: String,
@@ -32,4 +34,5 @@ macro_rules! implement_error {
 }
 
 implement_error!(std::io::Error, "IO error");
-implement_error!(obj::ObjError, "OBJ load error");
+implement_error!(LoadError, "OBJ load error");
+
