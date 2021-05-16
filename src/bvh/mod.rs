@@ -49,10 +49,10 @@ pub fn triangles_from_file<P: AsRef<Path> + fmt::Debug>(filename: P) -> Result<V
             t: MaterialType::Diffuse,
             
         };
-        //Organize positions into Vector3s
+        /*//Organize positions into Vector3s
         let positions: Vec<(Vector3,Vector3)> = model.mesh.positions
             .chunks(3)
-            .zip(model.mesh.normals.chunks(3)) //Zip in the normals as well
+            .zip(normals) //Zip in the normals as well
             .map(|p| match p{
                 ([x, y, z], [nx, ny, nz]) =>
                 (Vector3::new(-*x, *y, *z), Vector3::new(-*nx, *ny, *nz)),
@@ -70,7 +70,48 @@ pub fn triangles_from_file<P: AsRef<Path> + fmt::Debug>(filename: P) -> Result<V
                 Triangle::new_with_normal(v2, v1, v0,n1, n0, n2, material.clone())},
                 _ => panic!("Couldn't load mesh")
             }).collect();
-        triangles.append(&mut t);
+        triangles.append(&mut t);*/
+        let has_normals = model.mesh.normals.len() > 0;
+        for _f in 0..model.mesh.indices.len()/3{
+            let i0 = model.mesh.indices[3*_f+0] as usize;
+            let i1 = model.mesh.indices[3*_f+1] as usize;
+            let i2 = model.mesh.indices[3*_f+2] as usize;
+            let v0 = Vector3::new(
+                -model.mesh.positions[i0*3+0],
+                model.mesh.positions[i0*3+1],
+                model.mesh.positions[i0*3+2],
+            );
+            let v1 = Vector3::new(
+                -model.mesh.positions[i1*3+0],
+                model.mesh.positions[i1*3+1],
+                model.mesh.positions[i1*3+2],
+            );
+            let v2 = Vector3::new(
+                -model.mesh.positions[i2*3+0],
+                model.mesh.positions[i2*3+1],
+                model.mesh.positions[i2*3+2],
+            );
+            if has_normals {
+                let n0 = Vector3::new(
+                    -model.mesh.normals[i0*3+0],
+                    model.mesh.normals[i0*3+1],
+                    model.mesh.normals[i0*3+2],
+                );
+                let n1 = Vector3::new(
+                    -model.mesh.normals[i1*3+0],
+                    model.mesh.normals[i1*3+1],
+                    model.mesh.normals[i1*3+2],
+                );
+                let n2 = Vector3::new(
+                    -model.mesh.normals[i2*3+0],
+                    model.mesh.normals[i2*3+1],
+                    model.mesh.normals[i2*3+2],
+                );
+                triangles.push(Triangle::new_with_normal(v2, v1, v0,n1, n0, n2, material.clone()))
+            }else{
+                triangles.push(Triangle::new(v2, v1, v0, material.clone()))
+            }
+        }
     }
     Ok(triangles)
 }
