@@ -8,7 +8,7 @@ use crate::{
 use super::aabb::AABB;
 
 #[derive(Clone)]
-pub struct TriangleMaterial{
+pub struct TriangleMaterial {
     pub color: Vector3,
     pub emit: Vector3,
     pub t: MaterialType,
@@ -26,12 +26,7 @@ pub struct Triangle {
 }
 
 impl Triangle {
-    pub fn new(
-        v0: Vector3,
-        v1: Vector3,
-        v2: Vector3,
-        material: TriangleMaterial
-    ) -> Self {
+    pub fn new(v0: Vector3, v1: Vector3, v2: Vector3, material: TriangleMaterial) -> Self {
         let v0v1 = v1.subtract(v0);
         let v0v2 = v2.subtract(v0);
         let normal = v0v1.cross(v0v2).normalized();
@@ -44,7 +39,7 @@ impl Triangle {
         n0: Vector3,
         n1: Vector3,
         n2: Vector3,
-        material: TriangleMaterial
+        material: TriangleMaterial,
     ) -> Self {
         let centroid = v0.add(v1).add(v2).multiply(1.0 / 3.0);
         Self {
@@ -55,7 +50,7 @@ impl Triangle {
             n1,
             n2,
             centroid,
-            material
+            material,
         }
     }
     pub fn trace(&self, pos: &Vector3, dir: &Vector3) -> Option<(Vector3, f32, f32)> {

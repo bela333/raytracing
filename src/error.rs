@@ -35,4 +35,3 @@ macro_rules! implement_error {
 
 implement_error!(std::io::Error, "IO error");
 implement_error!(LoadError, "OBJ load error");
-

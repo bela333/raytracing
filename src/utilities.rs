@@ -114,7 +114,7 @@ impl Vector3 {
         )
     }
 
-    pub fn from_slice(a: &[f32]) -> Self{
+    pub fn from_slice(a: &[f32]) -> Self {
         Self::new(a[0], a[1], a[2])
     }
 

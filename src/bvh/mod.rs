@@ -7,43 +7,58 @@ use std::{
     usize,
 };
 
+use crate::{
+    bvh::triangle::TriangleMaterial,
+    error::Error,
+    ray_resolver::MaterialType,
+    utilities::{Components, Vector3},
+};
 
-
-use crate::{bvh::triangle::TriangleMaterial, error::Error, ray_resolver::MaterialType, utilities::{Components, Vector3}};
-
-use self::{aabb::{AABB, AABBRayResolver}, multi_ray_resolver::MultiRayResolver, triangle::{Triangle, TriangleResolver}};
+use self::{
+    aabb::{AABBRayResolver, AABB},
+    multi_ray_resolver::MultiRayResolver,
+    triangle::{Triangle, TriangleResolver},
+};
 
 pub mod aabb;
 pub mod dummy;
 pub mod multi_ray_resolver;
 pub mod triangle;
 
-pub fn generate_bvh_from_file<P: AsRef<Path> + fmt::Debug>(filename: P) -> Result<AABBRayResolver, Error> {
+pub fn generate_bvh_from_file<P: AsRef<Path> + fmt::Debug>(
+    filename: P,
+) -> Result<AABBRayResolver, Error> {
     let triangles = triangles_from_file(filename)?;
     generate_bvh(triangles)
 }
 
-pub fn triangles_from_file<P: AsRef<Path> + fmt::Debug>(filename: P) -> Result<Vec<Triangle>, Error> {
-    let (models, materials) = tobj::load_obj(filename, 
-        &tobj::LoadOptions{
+pub fn triangles_from_file<P: AsRef<Path> + fmt::Debug>(
+    filename: P,
+) -> Result<Vec<Triangle>, Error> {
+    let (models, materials) = tobj::load_obj(
+        filename,
+        &tobj::LoadOptions {
             single_index: true,
             triangulate: true,
             ..Default::default()
-        }
+        },
     )?;
     //Use default material if no material file can be loaded
     let materials = materials.unwrap_or(vec![tobj::Material::default()]);
     //Use default material if no materials were loaded
-    let materials = if materials.len() <= 0 {vec![tobj::Material::default()]}else{materials};
+    let materials = if materials.len() <= 0 {
+        vec![tobj::Material::default()]
+    } else {
+        materials
+    };
     let mut triangles: Vec<Triangle> = Vec::new();
     for model in models {
         let material_index = model.mesh.material_id.unwrap_or(0);
         let material = materials.get(material_index).unwrap_or(&materials[0]);
-        let material = TriangleMaterial{
+        let material = TriangleMaterial {
             color: Vector3::from_slice(&material.diffuse),
             emit: Vector3::zero(),
             t: MaterialType::Diffuse,
-            
         };
         /*//Organize positions into Vector3s
         let positions: Vec<(Vector3,Vector3)> = model.mesh.positions
@@ -68,43 +83,51 @@ pub fn triangles_from_file<P: AsRef<Path> + fmt::Debug>(filename: P) -> Result<V
             }).collect();
         triangles.append(&mut t);*/
         let has_normals = model.mesh.normals.len() > 0;
-        for _f in 0..model.mesh.indices.len()/3{
-            let i0 = model.mesh.indices[3*_f+0] as usize;
-            let i1 = model.mesh.indices[3*_f+1] as usize;
-            let i2 = model.mesh.indices[3*_f+2] as usize;
+        for _f in 0..model.mesh.indices.len() / 3 {
+            let i0 = model.mesh.indices[3 * _f + 0] as usize;
+            let i1 = model.mesh.indices[3 * _f + 1] as usize;
+            let i2 = model.mesh.indices[3 * _f + 2] as usize;
             let v0 = Vector3::new(
-                -model.mesh.positions[i0*3+0],
-                model.mesh.positions[i0*3+1],
-                model.mesh.positions[i0*3+2],
+                -model.mesh.positions[i0 * 3 + 0],
+                model.mesh.positions[i0 * 3 + 1],
+                model.mesh.positions[i0 * 3 + 2],
             );
             let v1 = Vector3::new(
-                -model.mesh.positions[i1*3+0],
-                model.mesh.positions[i1*3+1],
-                model.mesh.positions[i1*3+2],
+                -model.mesh.positions[i1 * 3 + 0],
+                model.mesh.positions[i1 * 3 + 1],
+                model.mesh.positions[i1 * 3 + 2],
             );
             let v2 = Vector3::new(
-                -model.mesh.positions[i2*3+0],
-                model.mesh.positions[i2*3+1],
-                model.mesh.positions[i2*3+2],
+                -model.mesh.positions[i2 * 3 + 0],
+                model.mesh.positions[i2 * 3 + 1],
+                model.mesh.positions[i2 * 3 + 2],
             );
             if has_normals {
                 let n0 = Vector3::new(
-                    -model.mesh.normals[i0*3+0],
-                    model.mesh.normals[i0*3+1],
-                    model.mesh.normals[i0*3+2],
+                    -model.mesh.normals[i0 * 3 + 0],
+                    model.mesh.normals[i0 * 3 + 1],
+                    model.mesh.normals[i0 * 3 + 2],
                 );
                 let n1 = Vector3::new(
-                    -model.mesh.normals[i1*3+0],
-                    model.mesh.normals[i1*3+1],
-                    model.mesh.normals[i1*3+2],
+                    -model.mesh.normals[i1 * 3 + 0],
+                    model.mesh.normals[i1 * 3 + 1],
+                    model.mesh.normals[i1 * 3 + 2],
                 );
                 let n2 = Vector3::new(
-                    -model.mesh.normals[i2*3+0],
-                    model.mesh.normals[i2*3+1],
-                    model.mesh.normals[i2*3+2],
+                    -model.mesh.normals[i2 * 3 + 0],
+                    model.mesh.normals[i2 * 3 + 1],
+                    model.mesh.normals[i2 * 3 + 2],
                 );
-                triangles.push(Triangle::new_with_normal(v2, v1, v0,n1, n0, n2, material.clone()))
-            }else{
+                triangles.push(Triangle::new_with_normal(
+                    v2,
+                    v1,
+                    v0,
+                    n1,
+                    n0,
+                    n2,
+                    material.clone(),
+                ))
+            } else {
                 triangles.push(Triangle::new(v2, v1, v0, material.clone()))
             }
         }
@@ -112,17 +135,15 @@ pub fn triangles_from_file<P: AsRef<Path> + fmt::Debug>(filename: P) -> Result<V
     Ok(triangles)
 }
 
-fn get_bounding_box(triangles: &Vec<Triangle>)->AABB{
+fn get_bounding_box(triangles: &Vec<Triangle>) -> AABB {
     let mut aabb = triangles[0].bounds();
-    for triangle in triangles{
+    for triangle in triangles {
         aabb = aabb.union(&triangle.bounds())
     }
     aabb
 }
 
-pub fn generate_bvh(
-    mut triangles: Vec<Triangle>
-) -> Result<AABBRayResolver, Error> {
+pub fn generate_bvh(mut triangles: Vec<Triangle>) -> Result<AABBRayResolver, Error> {
     if triangles.len() < 1 {
         return Err(Error::new(
             "BVH generation requires atleast 2 triangles".to_string(),
@@ -141,7 +162,7 @@ pub fn generate_bvh(
     }
     let bounds = get_bounding_box(&triangles);
     let orientation = bounds.size().largest_component(); //Divide among the longest dimension
-    //Divide triangles among the median
+                                                         //Divide triangles among the median
     let (t1, t2) = {
         let index = triangles.len() / 2;
         triangles.select_nth_unstable_by(index, |a, b| {

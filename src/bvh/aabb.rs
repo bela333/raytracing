@@ -103,7 +103,7 @@ impl AABB {
             max: Vector3::new(xmax, ymax, zmax),
         }
     }
-    pub fn size(&self)->Vector3{
+    pub fn size(&self) -> Vector3 {
         self.max.subtract(self.min)
     }
 }
