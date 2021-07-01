@@ -11,11 +11,7 @@ use std::{
 
 use crate::{bvh::triangle::TriangleMaterial, error::Error, ray_resolver::MaterialType, utilities::{Components, Vector3}};
 
-use self::{
-    aabb::AABBRayResolver,
-    multi_ray_resolver::MultiRayResolver,
-    triangle::{Triangle, TriangleResolver},
-};
+use self::{aabb::{AABB, AABBRayResolver}, multi_ray_resolver::MultiRayResolver, triangle::{Triangle, TriangleResolver}};
 
 pub mod aabb;
 pub mod dummy;
@@ -116,13 +112,16 @@ pub fn triangles_from_file<P: AsRef<Path> + fmt::Debug>(filename: P) -> Result<V
     Ok(triangles)
 }
 
-pub fn generate_bvh(triangles: Vec<Triangle>) -> Result<AABBRayResolver, Error> {
-    _generate_bvh(triangles, Components::X)
+fn get_bounding_box(triangles: &Vec<Triangle>)->AABB{
+    let mut aabb = triangles[0].bounds();
+    for triangle in triangles{
+        aabb = aabb.union(&triangle.bounds())
+    }
+    aabb
 }
 
-fn _generate_bvh(
-    mut triangles: Vec<Triangle>,
-    orientation: Components,
+pub fn generate_bvh(
+    mut triangles: Vec<Triangle>
 ) -> Result<AABBRayResolver, Error> {
     if triangles.len() < 1 {
         return Err(Error::new(
@@ -133,13 +132,15 @@ fn _generate_bvh(
         //Return single triangle
         let triangle = triangles[0].clone();
         let mut aabb = triangle.bounds();
-        let margin: Vector3 = aabb.max.subtract(aabb.min).multiply(1.0/100.0); //Add a small margin around the triangle
-        aabb.min = aabb.min.subtract(margin);
-        aabb.max = aabb.max.add(margin);
+        //let margin: Vector3 = aabb.max.subtract(aabb.min).multiply(1.0/100.0); //Add a small margin around the triangle
+        //aabb.min = aabb.min.subtract(margin);
+        //aabb.max = aabb.max.add(margin);
         let inner = TriangleResolver { triangle };
         let resolver = AABBRayResolver::new(aabb, inner);
         return Ok(resolver);
     }
+    let bounds = get_bounding_box(&triangles);
+    let orientation = bounds.size().largest_component(); //Divide among the longest dimension
     //Divide triangles among the median
     let (t1, t2) = {
         let index = triangles.len() / 2;
@@ -153,10 +154,8 @@ fn _generate_bvh(
     };
 
     //Recursive generate BVH for each branch
-    let bvh1 = _generate_bvh(t1, orientation.next())?;
-    let bvh2 = _generate_bvh(t2, orientation.next())?;
-    //Calculate size of current AABB
-    let bounds = bvh1.aabb.union(&bvh2.aabb);
+    let bvh1 = generate_bvh(t1)?;
+    let bvh2 = generate_bvh(t2)?;
     let bvh1 = Box::new(bvh1);
     let bvh2 = Box::new(bvh2);
     //Create MultiRayResolver
