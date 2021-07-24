@@ -8,16 +8,20 @@ use std::{
 };
 
 use crate::{
-    bvh::triangle::TriangleMaterial,
     error::Error,
-    ray_resolver::MaterialType,
+    ray_resolvers::{
+        bvh::{
+            multi_ray_resolver::MultiRayResolver,
+            triangle::{TriangleMaterial, TriangleResolver},
+        },
+        ray_resolver::MaterialType,
+    },
     utilities::{Components, Vector3},
 };
 
 use self::{
     aabb::{AABBRayResolver, AABB},
-    multi_ray_resolver::MultiRayResolver,
-    triangle::{Triangle, TriangleResolver},
+    triangle::Triangle,
 };
 
 pub mod aabb;

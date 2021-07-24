@@ -1,7 +1,7 @@
 use std::{f32::consts::PI, usize};
 
-use crate::ray_resolver::{MaterialType, RayResolver};
-use crate::renderer::Renderer;
+use crate::ray_resolvers::ray_resolver::{MaterialType, RayResolver};
+use crate::renderers::renderer::Renderer;
 use crate::utilities::{SceneData, Vector3};
 use rand_distr::{Distribution, Uniform};
 

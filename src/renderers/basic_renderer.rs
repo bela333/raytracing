@@ -1,5 +1,5 @@
-use crate::ray_resolver::RayResolver;
-use crate::renderer::Renderer;
+use crate::ray_resolvers::ray_resolver::RayResolver;
+use crate::renderers::renderer::Renderer;
 use crate::utilities::{SceneData, Vector3};
 
 pub struct BasicRenderer<T> {

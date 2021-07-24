@@ -1,8 +1,8 @@
 use std::{cmp::Ordering, f32::EPSILON};
 
 use crate::{
-    ray_resolver::{MaterialType, RayResolver, RayResult},
-    utilities::Vector3,
+    ray_resolvers::ray_resolver::{MaterialType, RayResolver, RayResult},
+    utilities::{SceneData, Vector3},
 };
 
 use super::aabb::AABB;
@@ -120,7 +120,7 @@ impl RayResolver for TriangleResolver {
         pos: Vector3,
         dir: Vector3,
         _refraction: bool,
-        _scene: crate::utilities::SceneData,
+        _scene: SceneData,
     ) -> Option<RayResult> {
         match self.triangle.trace(&pos, &dir) {
             Some((hit, u, v)) => {

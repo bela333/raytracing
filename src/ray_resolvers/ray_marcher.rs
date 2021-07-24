@@ -1,5 +1,6 @@
-use crate::ray_resolver::{MaterialType, RayResolver, RayResult};
 use crate::utilities::{SceneData, Vector3};
+
+use super::ray_resolver::{MaterialType, RayResolver, RayResult};
 
 pub struct RayMarcher {
     pub max_steps: u32,

@@ -1,4 +1,7 @@
-use crate::{ray_resolver::RayResolver, utilities::Vector3};
+use crate::{
+    ray_resolvers::ray_resolver::{RayResolver, RayResult},
+    utilities::{SceneData, Vector3},
+};
 
 #[derive(Clone, Copy)]
 pub struct AABB {
@@ -126,8 +129,8 @@ impl RayResolver for AABBRayResolver {
         pos: Vector3,
         dir: Vector3,
         refraction: bool,
-        scene: crate::utilities::SceneData,
-    ) -> Option<crate::ray_resolver::RayResult> {
+        scene: SceneData,
+    ) -> Option<RayResult> {
         match self.aabb.trace(&pos, &dir) {
             Some(_) => self.inner.resolve(pos, dir, refraction, scene),
             None => None,

@@ -1,7 +1,8 @@
+use crate::ray_resolvers::bvh::aabb::AABBRayResolver;
 use crate::{
-    bvh::{aabb::AABBRayResolver, generate_bvh_from_file},
-    ray_marcher::SDFResult,
-    ray_resolver::MaterialType,
+    ray_resolvers::{
+        bvh::generate_bvh_from_file, ray_marcher::SDFResult, ray_resolver::MaterialType,
+    },
     utilities::Vector3,
 };
 

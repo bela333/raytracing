@@ -1,6 +1,9 @@
 use std::cmp::Ordering;
 
-use crate::ray_resolver::RayResolver;
+use crate::{
+    ray_resolvers::ray_resolver::{RayResolver, RayResult},
+    utilities::{SceneData, Vector3},
+};
 
 pub struct MultiRayResolver {
     pub inner: Vec<Box<dyn RayResolver + Sync>>,
@@ -9,11 +12,11 @@ pub struct MultiRayResolver {
 impl RayResolver for MultiRayResolver {
     fn resolve(
         &self,
-        pos: crate::utilities::Vector3,
-        dir: crate::utilities::Vector3,
+        pos: Vector3,
+        dir: Vector3,
         refraction: bool,
-        scene: crate::utilities::SceneData,
-    ) -> Option<crate::ray_resolver::RayResult> {
+        scene: SceneData,
+    ) -> Option<RayResult> {
         let r = self
             .inner
             .iter()

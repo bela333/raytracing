@@ -1,8 +1,9 @@
-use crate::ray_resolver::RayResolver;
 use crate::utilities::{Vector3, SceneData};
-use crate::ray_resolver::{MaterialType, RayResult};
+
 
 use std::collections::HashMap;
+
+use super::ray_resolver::{MaterialType, RayResolver, RayResult};
 
 #[derive(Clone)]
 pub struct Voxel{

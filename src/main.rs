@@ -5,23 +5,20 @@ extern crate rand;
 extern crate rand_distr;
 extern crate rayon;
 
-pub mod basic_renderer;
-pub mod bvh;
 pub mod error;
-pub mod path_tracer;
-pub mod ray_marcher;
-pub mod ray_resolver;
-pub mod renderer;
+pub mod ray_resolvers;
+pub mod renderers;
 mod scene;
 pub mod utilities;
 
-use crate::renderer::Renderer;
+use crate::renderers::renderer::Renderer;
 use exr::prelude::*;
 use image::ImageBuffer;
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
 use rand_distr::Uniform;
-use ray_resolver::RayResolver;
+use ray_resolvers::ray_resolver::RayResolver;
 use rayon::prelude::*;
+use renderers::{basic_renderer, path_tracer};
 use scene::get_resolver;
 use std::{
     f32::consts::{FRAC_PI_2, PI},

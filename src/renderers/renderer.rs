@@ -1,5 +1,7 @@
-use crate::ray_resolver::RayResolver;
-use crate::utilities::{SceneData, Vector3};
+use crate::{
+    ray_resolvers::ray_resolver::RayResolver,
+    utilities::{SceneData, Vector3},
+};
 
 pub trait Renderer<T: RayResolver> {
     fn render(
