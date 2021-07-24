@@ -1,11 +1,5 @@
 use core::fmt;
-use std::{
-    cmp::Ordering,
-    fs::File,
-    io::{BufRead, BufReader},
-    path::Path,
-    usize,
-};
+use std::{cmp::Ordering, path::Path, usize};
 
 use crate::{
     error::Error,
@@ -16,7 +10,7 @@ use crate::{
         },
         ray_resolver::MaterialType,
     },
-    utilities::{Components, Vector3},
+    utilities::Vector3,
 };
 
 use self::{
@@ -156,10 +150,7 @@ pub fn generate_bvh(mut triangles: Vec<Triangle>) -> Result<AABBRayResolver, Err
     if triangles.len() == 1 {
         //Return single triangle
         let triangle = triangles[0].clone();
-        let mut aabb = triangle.bounds();
-        //let margin: Vector3 = aabb.max.subtract(aabb.min).multiply(1.0/100.0); //Add a small margin around the triangle
-        //aabb.min = aabb.min.subtract(margin);
-        //aabb.max = aabb.max.add(margin);
+        let aabb = triangle.bounds();
         let inner = TriangleResolver { triangle };
         let resolver = AABBRayResolver::new(aabb, inner);
         return Ok(resolver);

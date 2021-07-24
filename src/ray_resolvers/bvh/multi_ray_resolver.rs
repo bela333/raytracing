@@ -1,5 +1,3 @@
-use std::cmp::Ordering;
-
 use crate::{
     ray_resolvers::ray_resolver::{RayResolver, RayResult},
     utilities::{SceneData, Vector3},
@@ -18,7 +16,7 @@ impl RayResolver for MultiRayResolver {
         scene: SceneData,
     ) -> Option<RayResult> {
         if self.inner.len() == 0 {
-            return None
+            return None;
         }
         if self.inner.len() == 1 {
             let ray = &self.inner[0];
@@ -26,7 +24,7 @@ impl RayResolver for MultiRayResolver {
         }
         let mut closest = None;
         let mut closest_distance = 0.0;
-        for ray in &self.inner{
+        for ray in &self.inner {
             let result = ray.resolve(pos, dir, refraction, scene.clone());
             match result {
                 Some(result) => {
@@ -35,7 +33,7 @@ impl RayResolver for MultiRayResolver {
                         closest = Some(result);
                         closest_distance = distance;
                     }
-                },
+                }
                 None => (),
             }
         }

@@ -37,6 +37,7 @@ const ASPECT_RATIO: f32 = WIDTH_F / HEIGHT_F;
 const PIXELS: u32 = WIDTH * HEIGHT;
 const FOV: f32 = 1.2;
 
+#[allow(dead_code)]
 enum Renderers {
     BasicRenderer,
     PathTracer,
@@ -46,6 +47,7 @@ enum Renderers {
 
 const RENDERER: Renderers = Renderers::PathTracer;
 
+#[allow(dead_code)]
 enum OutputFormats {
     PNG,
     OPENEXR,
@@ -54,6 +56,7 @@ enum OutputFormats {
 const OUTPUT_FORMAT: OutputFormats = OutputFormats::PNG;
 const FILE_NAME: &str = "image.png";
 
+#[allow(dead_code)]
 enum CameraTypes {
     Normal,
     Equirectangular,
@@ -111,17 +114,13 @@ fn main() {
             save_render(&renderer, &scene, FILE_NAME);
         }
         Renderers::Albedo => {
-            let renderer = albedo::AlbedoRenderer{
-                resolver,
-            };
+            let renderer = albedo::AlbedoRenderer { resolver };
             save_render(&renderer, &scene, FILE_NAME);
-        },
+        }
         Renderers::Normal => {
-            let renderer = normal::NormalRenderer{
-                resolver,
-            };
+            let renderer = normal::NormalRenderer { resolver };
             save_render(&renderer, &scene, FILE_NAME);
-        },
+        }
     }
 }
 
