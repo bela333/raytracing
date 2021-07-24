@@ -18,7 +18,7 @@ use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
 use rand_distr::Uniform;
 use ray_resolvers::ray_resolver::RayResolver;
 use rayon::prelude::*;
-use renderers::{basic_renderer, path_tracer};
+use renderers::{albedo, basic_renderer, normal, path_tracer};
 use scene::get_resolver;
 use std::{
     f32::consts::{FRAC_PI_2, PI},
@@ -40,9 +40,11 @@ const FOV: f32 = 1.2;
 enum Renderers {
     BasicRenderer,
     PathTracer,
+    Albedo,
+    Normal,
 }
 
-const RENDERER: Renderers = Renderers::PathTracer;
+const RENDERER: Renderers = Renderers::Normal;
 
 enum OutputFormats {
     PNG,
@@ -108,6 +110,18 @@ fn main() {
             };
             save_render(&renderer, &scene, FILE_NAME);
         }
+        Renderers::Albedo => {
+            let renderer = albedo::AlbedoRenderer{
+                resolver,
+            };
+            save_render(&renderer, &scene, FILE_NAME);
+        },
+        Renderers::Normal => {
+            let renderer = normal::NormalRenderer{
+                resolver,
+            };
+            save_render(&renderer, &scene, FILE_NAME);
+        },
     }
 }
 
