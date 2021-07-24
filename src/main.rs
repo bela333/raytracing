@@ -44,7 +44,7 @@ enum Renderers {
     Normal,
 }
 
-const RENDERER: Renderers = Renderers::Normal;
+const RENDERER: Renderers = Renderers::PathTracer;
 
 enum OutputFormats {
     PNG,

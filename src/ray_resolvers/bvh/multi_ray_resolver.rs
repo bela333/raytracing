@@ -17,20 +17,28 @@ impl RayResolver for MultiRayResolver {
         refraction: bool,
         scene: SceneData,
     ) -> Option<RayResult> {
-        let r = self
-            .inner
-            .iter()
-            .map(|r| r.resolve(pos, dir, refraction, scene.clone()))
-            .filter(|r| r.is_some())
-            .map(|r| r.unwrap())
-            .map(|r| {
-                let dist = r.pos.subtract(pos).dot(dir);
-                (r, dist)
-            })
-            .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));
-        match r {
-            Some((r, _)) => Some(r),
-            None => None,
+        if self.inner.len() == 0 {
+            return None
         }
+        if self.inner.len() == 1 {
+            let ray = &self.inner[0];
+            return ray.resolve(pos, dir, refraction, scene.clone());
+        }
+        let mut closest = None;
+        let mut closest_distance = 0.0;
+        for ray in &self.inner{
+            let result = ray.resolve(pos, dir, refraction, scene.clone());
+            match result {
+                Some(result) => {
+                    let distance = result.pos.subtract(pos).dot(dir);
+                    if closest.is_none() || distance < closest_distance {
+                        closest = Some(result);
+                        closest_distance = distance;
+                    }
+                },
+                None => (),
+            }
+        }
+        return closest;
     }
 }
