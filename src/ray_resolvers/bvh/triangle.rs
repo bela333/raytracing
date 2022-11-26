@@ -58,9 +58,9 @@ impl Triangle {
         let v0v2 = self.v2.subtract(self.v0);
         let pvec = dir.cross(v0v2);
         let det = v0v1.dot(pvec);
-        if det < EPSILON * 4.0 {
+        /*if det < EPSILON * 4.0 {
             return None;
-        }
+        } // Removed backface-culling */
         let inv_det = 1.0 / det;
         let tvec = pos.subtract(self.v0);
         let u = tvec.dot(pvec) * inv_det;
@@ -73,6 +73,9 @@ impl Triangle {
             return None;
         }
         let t = v0v2.dot(qvec) * inv_det;
+        if t < 0.0{
+            return None;
+        }
         let hit = dir.multiply(t).add(*pos);
         return Some((hit, u, v));
     }
@@ -121,14 +124,14 @@ impl RayResolver for TriangleResolver {
         dir: Vector3,
         _refraction: bool,
         _scene: SceneData,
-    ) -> Option<RayResult> {
+    ) -> Vec<RayResult> {
         match self.triangle.trace(&pos, &dir) {
             Some((hit, u, v)) => {
                 let n0 = self.triangle.n0.multiply(u);
                 let n1 = self.triangle.n1.multiply(v);
                 let n2 = self.triangle.n2.multiply(1.0 - u - v);
                 let normal = n0.add(n1).add(n2).normalized();
-                Some(RayResult::new(
+                vec!(RayResult::new(
                     hit,
                     self.triangle.material.color,
                     normal,
@@ -136,7 +139,7 @@ impl RayResolver for TriangleResolver {
                     self.triangle.material.t.clone(),
                 ))
             }
-            None => None,
+            None => vec!(),
         }
     }
 }

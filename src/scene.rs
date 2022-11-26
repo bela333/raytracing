@@ -5,7 +5,7 @@ use crate::{
 
 pub fn get_resolver() -> AABBRayResolver {
     println!("Building BVH");
-    let r = generate_bvh_from_file("teapot.obj").unwrap();
+    let r = generate_bvh_from_file("monke.obj").unwrap();
     println!("BVH done!");
     r
 }

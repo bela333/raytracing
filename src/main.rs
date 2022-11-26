@@ -14,12 +14,12 @@ use image::ImageBuffer;
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
 use ray_resolvers::ray_resolver::RayResolver;
 use rayon::prelude::*;
-use renderers::basic_renderer;
+use renderers::{basic_renderer, volumetric_renderer};
 use scene::get_resolver;
 use utilities::{SceneData, Vector3};
 
-const WIDTH: u32 = 1920;
-const HEIGHT: u32 = 1080;
+const WIDTH: u32 = 1920/2;
+const HEIGHT: u32 = 1080/2;
 
 const WIDTH_F: f32 = WIDTH as f32 / 2f32;
 const HEIGHT_F: f32 = HEIGHT as f32 / 2f32;
@@ -40,7 +40,13 @@ fn main() {
         fog_amount: 50.0,
         fog: false,
     };
-    let renderer = basic_renderer::BasicRenderer { resolver };
+    //let renderer = basic_renderer::BasicRenderer { resolver };
+    let renderer = volumetric_renderer::VolumetricRenderer {
+        lamp: Vector3::new(0.0, 5.0, 0.0),
+        divisions: 100,
+        density: 0.25,
+        resolver,
+    };
     save_render(&renderer, &scene, FILE_NAME);
 }
 
@@ -64,10 +70,7 @@ where
                     //TODO: better toneing
                     let color = if T::needs_toneing() {
                         let color = render_pixel(renderer, scene, x, y);
-                        let color_g = color.pow(1f32 / 2.2f32);
-                        let lum = color_g.x * 0.2126 + color_g.y * 0.7152 + color_g.z * 0.0722;
-                        let color = color.multiply(2.0 / (lum + 1.0));
-                        color.pow(1f32 / 2.2f32)
+                        color.pow(2.2f32)
                     } else {
                         render_pixel(renderer, scene, x, y)
                     };

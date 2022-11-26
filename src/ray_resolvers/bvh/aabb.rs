@@ -130,10 +130,10 @@ impl RayResolver for AABBRayResolver {
         dir: Vector3,
         refraction: bool,
         scene: SceneData,
-    ) -> Option<RayResult> {
+    ) -> Vec<RayResult> {
         match self.aabb.trace(&pos, &dir) {
             Some(_) => self.inner.resolve(pos, dir, refraction, scene),
-            None => None,
+            None => vec![],
         }
     }
 }

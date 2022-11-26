@@ -14,29 +14,19 @@ impl RayResolver for MultiRayResolver {
         dir: Vector3,
         refraction: bool,
         scene: SceneData,
-    ) -> Option<RayResult> {
+    ) -> Vec<RayResult> {
         if self.inner.len() == 0 {
-            return None;
+            return vec![];
         }
         if self.inner.len() == 1 {
             let ray = &self.inner[0];
             return ray.resolve(pos, dir, refraction, scene.clone());
         }
-        let mut closest = None;
-        let mut closest_distance = 0.0;
+        let mut all = Vec::new();
         for ray in &self.inner {
             let result = ray.resolve(pos, dir, refraction, scene.clone());
-            match result {
-                Some(result) => {
-                    let distance = result.pos.subtract(pos).dot(dir);
-                    if closest.is_none() || distance < closest_distance {
-                        closest = Some(result);
-                        closest_distance = distance;
-                    }
-                }
-                None => (),
-            }
+            all.extend(result.into_iter());
         }
-        return closest;
+        return all;
     }
 }

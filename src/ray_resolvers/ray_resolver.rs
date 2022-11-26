@@ -7,10 +7,10 @@ pub trait RayResolver {
         dir: Vector3,
         refraction: bool,
         scene: SceneData,
-    ) -> Option<RayResult>;
+    ) -> Vec<RayResult>;
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum MaterialType {
     Diffuse,
     Reflective,
@@ -18,6 +18,7 @@ pub enum MaterialType {
     Glass(f32),
 }
 
+#[derive(Debug)]
 pub struct RayResult {
     pub pos: Vector3,
     pub color: Vector3,
