@@ -1,5 +1,3 @@
-use rand_distr::{Distribution, UnitSphere};
-
 #[derive(Copy, Clone)]
 pub struct Vector3 {
     pub x: f32,
@@ -168,20 +166,7 @@ impl Vector3 {
         normal.multiply(2f32).subtract(p).normalized()
     }
 
-    pub fn random_on_sphere() -> Self {
-        let mut rng = rand::thread_rng();
-        let v: [f32; 3] = UnitSphere.sample(&mut rng);
-        Self::new(v[0], v[1], v[2])
-    }
 
-    pub fn random_on_hemisphere(normal: Self) -> Self {
-        let p = Self::random_on_sphere();
-        if p.dot(normal) < 0f32 {
-            p.multiply(-1f32)
-        } else {
-            p
-        }
-    }
 
     pub fn comp_multiply(&self, a: Self) -> Self {
         Self::new(self.x * a.x, self.y * a.y, self.z * a.z)

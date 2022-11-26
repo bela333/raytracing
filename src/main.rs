@@ -1,8 +1,6 @@
 extern crate exr;
 extern crate image;
 extern crate indicatif;
-extern crate rand;
-extern crate rand_distr;
 extern crate rayon;
 
 pub mod error;
@@ -12,18 +10,12 @@ mod scene;
 pub mod utilities;
 
 use crate::renderers::renderer::Renderer;
-use exr::prelude::*;
 use image::ImageBuffer;
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
-use rand_distr::Uniform;
 use ray_resolvers::ray_resolver::RayResolver;
 use rayon::prelude::*;
-use renderers::{albedo, basic_renderer, normal, path_tracer};
+use renderers::basic_renderer;
 use scene::get_resolver;
-use std::{
-    f32::consts::{FRAC_PI_2, PI},
-    usize,
-};
 use utilities::{SceneData, Vector3};
 
 const WIDTH: u32 = 1920;
@@ -37,32 +29,8 @@ const ASPECT_RATIO: f32 = WIDTH_F / HEIGHT_F;
 const PIXELS: u32 = WIDTH * HEIGHT;
 const FOV: f32 = 1.2;
 
-#[allow(dead_code)]
-enum Renderers {
-    BasicRenderer,
-    PathTracer,
-    Albedo,
-    Normal,
-}
-
-const RENDERER: Renderers = Renderers::PathTracer;
-
-#[allow(dead_code)]
-enum OutputFormats {
-    PNG,
-    OPENEXR,
-}
-
-const OUTPUT_FORMAT: OutputFormats = OutputFormats::PNG;
 const FILE_NAME: &str = "image.png";
 
-#[allow(dead_code)]
-enum CameraTypes {
-    Normal,
-    Equirectangular,
-}
-
-const CAMERA_TYPE: CameraTypes = CameraTypes::Normal;
 
 fn main() {
     let resolver = get_resolver();
@@ -72,56 +40,8 @@ fn main() {
         fog_amount: 50.0,
         fog: false,
     };
-    match RENDERER {
-        Renderers::BasicRenderer => {
-            let renderer = basic_renderer::BasicRenderer { resolver };
-            save_render(&renderer, &scene, FILE_NAME);
-        }
-        Renderers::PathTracer => {
-            let skybox = read()
-                .no_deep_data()
-                .largest_resolution_level()
-                .rgba_channels(
-                    |resolution, _| {
-                        let p = [0.0; 4];
-                        let line = vec![p; resolution.width()];
-                        let img = vec![line; resolution.height()];
-                        img
-                    },
-                    |img, pos, (r, g, b, a): (f32, f32, f32, f32)| {
-                        img[pos.y()][pos.x()] = [r, g, b, a];
-                    },
-                )
-                .first_valid_layer()
-                .all_attributes()
-                .from_file("env.exr")
-                .unwrap();
-            let pixels: Vec<Vec<[f32; 4]>> = skybox.layer_data.channel_data.pixels;
-            let s = (pixels.first().unwrap().len(), pixels.len());
-            let renderer = path_tracer::PathTracer {
-                resolver,
-                bounces: 5,
-                samples: 100,
-                epsilon: 0.0002f32,
-                contrast: 1f32 / 5f32,
-                brightness: -0.5,
-                depth_of_field: 4f32,
-                dof_distr: Uniform::new(-0.075, 0.075),
-                dof: false,
-                skybox_size: s,
-                skybox: pixels,
-            };
-            save_render(&renderer, &scene, FILE_NAME);
-        }
-        Renderers::Albedo => {
-            let renderer = albedo::AlbedoRenderer { resolver };
-            save_render(&renderer, &scene, FILE_NAME);
-        }
-        Renderers::Normal => {
-            let renderer = normal::NormalRenderer { resolver };
-            save_render(&renderer, &scene, FILE_NAME);
-        }
-    }
+    let renderer = basic_renderer::BasicRenderer { resolver };
+    save_render(&renderer, &scene, FILE_NAME);
 }
 
 fn save_render<T: Renderer<J>, J: RayResolver>(renderer: &T, scene: &SceneData, file_name: &str)
@@ -135,9 +55,7 @@ where
     bar.set_draw_delta((PIXELS / 100) as u64);
     bar.set_style(style);
     bar.set_prefix("Rendering... ");
-    match OUTPUT_FORMAT {
-        OutputFormats::PNG => {
-            let pixels: Vec<u8> = (0..PIXELS)
+    let pixels: Vec<u8> = (0..PIXELS)
                 .into_par_iter()
                 .progress_with(bar)
                 .map(|i| {
@@ -161,33 +79,6 @@ where
                 ImageBuffer::from_vec(WIDTH, HEIGHT, pixels).unwrap();
             println!("\n\nWriting to {}", file_name);
             image.save(file_name).unwrap();
-        }
-        OutputFormats::OPENEXR => {
-            let pixels: Vec<Vector3> = (0..PIXELS)
-                .into_par_iter()
-                .progress_with(bar)
-                .map(|i| {
-                    let x = i % WIDTH;
-                    let y = i / WIDTH;
-                    let color = render_pixel(renderer, scene, x, y);
-                    color
-                })
-                .collect();
-            println!("\n\nWriting to {}", file_name);
-            let layer = Layer::new(
-                (WIDTH as usize, HEIGHT as usize),
-                LayerAttributes::default(),
-                Encoding::SMALL_FAST_LOSSY,
-                SpecificChannels::rgb(|pos: Vec2<usize>| {
-                    let i = pos.0 + pos.1 * WIDTH as usize;
-                    let c = pixels[i];
-                    (c.x, c.y, c.z)
-                }),
-            );
-            let image = Image::from_layer(layer);
-            image.write().to_file(file_name).unwrap();
-        }
-    }
 }
 
 fn render_pixel<T: Renderer<J>, J: RayResolver>(
@@ -196,30 +87,11 @@ fn render_pixel<T: Renderer<J>, J: RayResolver>(
     x: u32,
     y: u32,
 ) -> Vector3 {
-    match CAMERA_TYPE {
-        CameraTypes::Normal => {
-            let start = scene.camera_position;
-            let _x: f32 = (x as f32 / WIDTH_F - 1f32) * ASPECT_RATIO;
-            let _y: f32 = -(y as f32 / HEIGHT_F - 1f32);
-            let ray_dir = scene
-                .get_look_matrix()
-                .multiply(utilities::Vector3::new(_x, _y, FOV).normalized());
-            renderer.render(start, ray_dir, scene.clone(), WIDTH, HEIGHT)
-        }
-        CameraTypes::Equirectangular => {
-            let start = scene.camera_position;
-            let clip_x: f32 = x as f32 / WIDTH_F - 1f32;
-            let clip_y: f32 = -(y as f32 / HEIGHT_F - 1f32);
-
-            let latitude = clip_y * FRAC_PI_2;
-            let longitude = clip_x * PI;
-
-            let (_y, t) = latitude.sin_cos();
-            let _z = longitude.cos() * t;
-            let _x = longitude.sin() * t;
-
-            let ray_dir = Vector3::new(_x, _y, _z);
-            renderer.render(start, ray_dir, scene.clone(), WIDTH, HEIGHT)
-        }
-    }
+    let start = scene.camera_position;
+    let _x: f32 = (x as f32 / WIDTH_F - 1f32) * ASPECT_RATIO;
+    let _y: f32 = -(y as f32 / HEIGHT_F - 1f32);
+    let ray_dir = scene
+        .get_look_matrix()
+        .multiply(utilities::Vector3::new(_x, _y, FOV).normalized());
+    renderer.render(start, ray_dir, scene.clone(), WIDTH, HEIGHT)
 }
