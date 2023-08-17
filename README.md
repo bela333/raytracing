@@ -1,4 +1,4 @@
-# Raytracer
+# Béélaa
 A simple Path Tracer written in rust using Rayon.
 
 ## Running
