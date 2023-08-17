@@ -1,6 +1,15 @@
 # Béélaa
 A simple Path Tracer written in rust using Rayon.
 
+## Features
+
+- Anti-aliasing
+- `.obj` model loading
+- SDF geometry
+- HDR skybox
+- Depth of field
+- Volumetric fog
+
 ## Running
 ```
 $ git clone https://github.com/bela333/raytracing.git
